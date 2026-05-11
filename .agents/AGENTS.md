@@ -180,7 +180,7 @@ El proyecto se divide en **13 changes incrementales** que cubren 77 historias de
 | # | Change | Estado | Complejidad | Depende de |
 |---|---|---|---|---|
 | 01 | `setup-backend-core` | ✅ Completado y archivado | 🔴 Alta | — |
-| 02 | `setup-frontend-core` | 🔲 Pendiente (**PRÓXIMO**) | 🟡 Media | — |
+| 02 | `setup-frontend-core` | ✅ Completado y archivado (2026-05-06) | 🟡 Media | — |
 | 03 | `auth-y-autorizacion` | 🔲 Pendiente | 🔴 Alta | 01, 02 |
 | 04 | `categorias-e-ingredientes` | 🔲 Pendiente | 🟡 Media | 03 |
 | 05 | `navegacion-layout-base` | 🔲 Pendiente | 🟡 Media | 02, 03 |
