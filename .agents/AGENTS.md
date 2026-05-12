@@ -206,6 +206,7 @@ Las skills están instaladas en `.agents/skills/`. Leer el `SKILL.md` correspond
 | Design system, tokens, componentes Tailwind reutilizables | `tailwind-design-system` | `skills/tailwind-design-system/SKILL.md` |
 | Páginas CRUD del dashboard (tabla + modal + delete + paginación) | `dashboard-crud-page` | `skills/dashboard-crud-page/SKILL.md` |
 | Implementación segura de JWT: creación, validación, rotación de tokens | `jwt-security` | `skills/jwt-security/SKILL.md` |
+| Configuración Better Auth: server/client, DB adapters, sesiones, plugins, OAuth | `better-auth-best-practices` | `skills/better-auth-best-practices/SKILL.md` |
 | Integración MercadoPago: checkout, estado de pagos, mock adapters | `mercadopago-integration` | `skills/mercadopago-integration/SKILL.md` |
 | Tests E2E con Playwright: automatización de browser, testing de flujos | `playwright-cli` | `skills/playwright-cli/SKILL.md` |
 | Performance en React: re-renders, bundles, async, server components | `vercel-react-best-practices` | `skills/vercel-react-best-practices/SKILL.md` |
