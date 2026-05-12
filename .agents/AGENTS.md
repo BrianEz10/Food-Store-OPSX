@@ -1,30 +1,67 @@
-# Protocolo de Colaboración y Skills — Food Store
+# Protocolo de Colaboración — Food Store
 
-Este documento define las reglas de comportamiento, el contexto del stack tecnológico, los patrones de arquitectura y las capacidades (skills) que los agentes de IA deben utilizar para desarrollar el proyecto **Food Store** — un e-commerce de alimentos.
+Este documento define las reglas de comportamiento, el rol del agente, el contexto del stack tecnológico, los patrones de arquitectura y las skills disponibles para el proyecto **Food Store** — un e-commerce full-stack para gestión de pedidos de comida.
 
 ---
 
-## 1. Reglas Críticas de Comportamiento
+## 1. Rol del Agente
+
+Actúa como un **Senior Tech Lead y Arquitecto de Software** con enfoque en Spec-Driven Development. Tu misión es garantizar que cada línea de código e incremento del sistema sea 100% fiel a la documentación técnica definida en `docs/`.
+
+---
+
+## 2. Reglas Críticas de Comportamiento
 
 > [!IMPORTANT]
-> **Spec-Driven Development (OPSX):** Este proyecto utiliza el workflow OPSX. Antes de implementar código, se debe tener un change con sus artefactos (proposal, design, tasks) aprobados. Consultá `openspec status` antes de escribir código.
+> **Usar subagentes (MANDATORIO):** Siempre que se trabaje en el repo (investigar, analizar, escribir código, refactors, generar docs, ejecutar comandos) se DEBEN usar subagentes. Este agente principal actúa como **orquestador/coordinador**: define el plan, delega y revisa. La única excepción: preguntas de clarificación y comandos mínimos de estado (`openspec list`, `git status`).
 
 > [!IMPORTANT]
-> **Memoria Persistente (Engram):** Al completar cualquier tarea significativa (decisión de arquitectura, bug fix, descubrimiento, patrón establecido), el agente DEBE guardar la información en Engram con `mem_save`. Al iniciar sesión, DEBE consultar `mem_context` y `mem_search` para recuperar contexto previo.
+> **Spec-Driven Development (OPSX):** Antes de implementar código, se debe tener un change con sus artefactos (proposal, design, tasks) aprobados. Ejecutar `openspec list --json` antes de escribir código.
 
-### Reglas Generales
+> [!IMPORTANT]
+> **Memoria Persistente (Engram):** Al completar cualquier tarea significativa, el agente DEBE guardar en Engram con `mem_save`. Al iniciar sesión, DEBE ejecutar `mem_context` y `mem_search` para recuperar contexto previo.
 
-- **Trazabilidad:** Toda sugerencia debe alinearse con las Historias de Usuario (US-000 a US-076) y las Reglas de Negocio (RN-XX) documentadas en `docs/Historias_de_usuario.txt`.
-- **Seguridad:** Priorizar siempre la validación JWT con `get_current_user` y `require_role`, y el hashing de contraseñas con bcrypt en todo diseño de autenticación.
-- **Atomicidad:** Las operaciones multi-tabla (especialmente creación de pedidos) DEBEN usar el patrón Unit of Work para garantizar transacciones atómicas.
+### Reglas de Negocio
+
+- **Trazabilidad:** Toda sugerencia debe alinearse con las Historias de Usuario (US-000 a US-076) y Reglas de Negocio (RN-XX) de `docs/Historias_de_usuario.txt`.
+- **Seguridad:** Priorizar siempre `get_current_user` y `require_role` con JWT, y hashing con bcrypt en todo diseño de autenticación.
+- **Atomicidad:** Las operaciones multi-tabla DEBEN usar el patrón Unit of Work para garantizar transacciones atómicas.
 - **Inmutabilidad:** Los pedidos SIEMPRE usan snapshots de precios y direcciones. Nunca referenciar datos mutables directamente.
 - **Errores RFC 7807:** Todos los errores de la API siguen el estándar Problem Details (`type`, `title`, `status`, `detail`, `instance`).
 - **Soft Delete:** Nunca borrar registros físicamente (excepto refresh tokens expirados). Usar el campo `eliminado_en`.
-- **PCI Compliance:** Los datos de tarjetas NUNCA pasan por el servidor de Food Store. La tokenización ocurre en el browser vía SDK de MercadoPago.
+- **PCI Compliance:** Los datos de tarjetas NUNCA pasan por el servidor. La tokenización ocurre en el browser vía SDK de MercadoPago.
+
+### Convenciones de Código
+
+#### Backend
+
+- Cada módulo sigue la estructura: `model.py · schemas.py · repository.py · service.py · router.py`
+- El `router.py` usa `response_model` explícito en todos los endpoints
+- El `service.py` lanza `HTTPException` — nunca el router ni el repository
+- Las migraciones van en `alembic/versions/` — nunca modificar tablas directamente
+- Rate limiting en endpoints críticos con `slowapi` (ej: login: 5 intentos / 15 min)
+- Contraseñas hasheadas con bcrypt (cost factor ≥ 12)
+- Refresh tokens almacenados en BD para soporte de invalidación
+
+#### Frontend
+
+- FSD estricto: imports solo fluyen hacia abajo — `Pages → Features → Entities → Shared`
+- Estado del servidor exclusivamente con **TanStack Query** (no duplicar en Zustand)
+- Estado del cliente (carrito, sesión, UI, pagos) con **Zustand stores** tipados
+- HTTP con Axios + interceptor JWT (attach + refresh automático)
+- Formularios con **TanStack Form** (no react-hook-form)
+- Gráficos del dashboard con **recharts**
+- Tokenización de tarjetas con `@mercadopago/sdk-react` — nunca manejar datos de tarjeta en frontend raw
+
+#### General
+
+- Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, etc.) — sin co-authored-by ni atribución a IA
+- Variables de entorno: usar `.env.example` como referencia — nunca commitear `.env`
+- No buildear después de cambios (el equipo corre el build cuando corresponde)
 
 ---
 
-## 2. Stack Tecnológico
+## 3. Stack Tecnológico
 
 ### Backend
 
@@ -68,19 +105,19 @@ Este documento define las reglas de comportamiento, el contexto del stack tecnol
 
 ---
 
-## 3. Arquitectura
+## 4. Arquitectura
 
-### Backend — Capas (flujo unidireccional)
+### Backend — Capas (flujo unidireccional, no puede invertirse)
 
 ```
 Request HTTP → Router → Service → Unit of Work → Repository → Model → PostgreSQL
 ```
 
 - **Router:** Recibe HTTP, valida con Pydantic, delega al Service. Sin lógica de negocio.
-- **Service:** Lógica de negocio. Coordina repositories vía UoW.
+- **Service:** Lógica de negocio stateless. Coordina repositories vía UoW. Lanza `HTTPException`.
 - **Unit of Work (UoW):** Context manager async. Commit en éxito, rollback en error. Expone repos como atributos.
-- **Repository:** Acceso a datos. `BaseRepository[T]` genérico + repos especializados.
-- **Model:** Clases SQLModel que mapean a tablas PostgreSQL.
+- **Repository:** Acceso a datos. `BaseRepository[T]` genérico + repos especializados. Sin lógica de negocio.
+- **Model:** Clases SQLModel que mapean a tablas PostgreSQL. Sin imports de capas superiores.
 
 ### Backend — Estructura (feature-first)
 
@@ -93,6 +130,7 @@ backend/
 │   │   ├── usuarios/  # CRUD, roles
 │   │   ├── direcciones/
 │   │   ├── categorias/
+│   │   ├── ingredientes/
 │   │   ├── productos/
 │   │   ├── pedidos/   # creación, FSM, historial
 │   │   ├── pagos/     # MercadoPago, webhooks
@@ -127,7 +165,7 @@ frontend/src/
 
 ---
 
-## 4. Patrones Clave
+## 5. Patrones Clave
 
 | Patrón | Dónde se aplica | Descripción |
 |---|---|---|
@@ -151,65 +189,88 @@ PENDIENTE ──(pago aprobado)──→ CONFIRMADO ──→ EN_PREPARACIÓN �
 - `PENDIENTE → CONFIRMADO`: Automática (webhook pago aprobado) + decremento stock
 - `CONFIRMADO → EN_PREPARACIÓN → EN_CAMINO → ENTREGADO`: Manual (Gestor de Pedidos)
 - Cancelación restaura stock si el pedido ya fue confirmado
-- `ENTREGADO` y `CANCELADO` son terminales
+- `ENTREGADO` y `CANCELADO` son estados terminales
 
 ---
 
-## 5. Skills Disponibles
+## 6. Skills Disponibles
 
-Las skills están instaladas en `.agents/skills/` y proveen guías especializadas:
+Las skills están instaladas en `.agents/skills/`. Leer el `SKILL.md` correspondiente **antes** de generar código. Múltiples skills pueden aplicar simultáneamente.
 
-| Skill | Descripción |
-|---|---|
-| [fastapi-expert](skills/fastapi-expert/SKILL.md) | Patrones avanzados de FastAPI: endpoints async, Pydantic v2, dependency injection, JWT, WebSocket |
-| [fastapi-templates](skills/fastapi-templates/SKILL.md) | Scaffolding de proyectos FastAPI con patrones de producción |
-| [find-skills](skills/find-skills/SKILL.md) | Descubrimiento e instalación de nuevas skills |
-| [jwt-security](skills/jwt-security/SKILL.md) | Implementación segura de JWT: creación, validación, almacenamiento, rotación de tokens |
-| [mercadopago-integration](skills/mercadopago-integration/SKILL.md) | Arquitectura de checkout con interfaces agnósticas y mock adapters (modo seguro, sin ejecución real) |
-| [playwright-cli](skills/playwright-cli/SKILL.md) | Tests end-to-end con Playwright: automatización de browser, testing de flujos |
-| [supabase-postgres-best-practices](skills/supabase-postgres-best-practices/SKILL.md) | Optimización de PostgreSQL: queries, schemas, índices, configuración |
-| [ui-ux-pro-max](skills/ui-ux-pro-max/SKILL.md) | Diseño UI/UX premium: 50+ estilos, paletas de color, font pairings, componentes por stack |
-| [vercel-react-best-practices](skills/vercel-react-best-practices/SKILL.md) | Performance en React/Next.js: rendering, re-renders, bundles, async, server components |
+| Contexto de activación | Skill | Archivo |
+|---|---|---|
+| Endpoints FastAPI, service, repository, schema Pydantic, UoW, router | `fastapi-expert` | `skills/fastapi-expert/SKILL.md` |
+| Scaffolding de proyectos FastAPI nuevos desde cero | `fastapi-templates` | `skills/fastapi-templates/SKILL.md` |
+| Queries SQL, migraciones Alembic, optimización PostgreSQL, índices | `supabase-postgres-best-practices` | `skills/supabase-postgres-best-practices/SKILL.md` |
+| Componentes React, páginas, hooks, Tailwind, estilo visual del frontend | `ui-ux-pro-max` | `skills/ui-ux-pro-max/SKILL.md` |
+| Design system, tokens, componentes Tailwind reutilizables | `tailwind-design-system` | `skills/tailwind-design-system/SKILL.md` |
+| Páginas CRUD del dashboard (tabla + modal + delete + paginación) | `dashboard-crud-page` | `skills/dashboard-crud-page/SKILL.md` |
+| Implementación segura de JWT: creación, validación, rotación de tokens | `jwt-security` | `skills/jwt-security/SKILL.md` |
+| Integración MercadoPago: checkout, estado de pagos, mock adapters | `mercadopago-integration` | `skills/mercadopago-integration/SKILL.md` |
+| Tests E2E con Playwright: automatización de browser, testing de flujos | `playwright-cli` | `skills/playwright-cli/SKILL.md` |
+| Performance en React: re-renders, bundles, async, server components | `vercel-react-best-practices` | `skills/vercel-react-best-practices/SKILL.md` |
+| El usuario pregunta qué skill usar o si existe una skill para X | `find-skills` | `skills/find-skills/SKILL.md` |
 
 ---
 
-## 6. Mapa de Changes (Prioridades de Implementación)
+## 7. Flujo OPSX (Spec-Driven Development)
 
-El proyecto se divide en **13 changes incrementales** que cubren 77 historias de usuario:
+```
+/opsx:explore  →  /opsx:propose  →  /opsx:apply  →  /opsx:archive
+```
+
+- Los cambios activos están en `openspec/changes/<nombre>/`
+- La config del proyecto está en `openspec/config.yaml`
+- Antes de implementar cualquier feature nueva, verificar con `openspec list --json`
+
+### Sync de docs al archivar
+
+Cada vez que se complete el archivado de un change, además de ejecutar el comando OPSX, actualizar `docs/mapa_de_changes.md` marcando el change como completado con la fecha.
+
+---
+
+## 8. Mapa de Changes
+
+El proyecto se divide en **18 changes incrementales** (Opción B: solo los 🔴 se parten en backend/frontend) que cubren 77 historias de usuario (US-000 a US-076). Ver detalle completo en `docs/mapa_de_changes.md`.
 
 | # | Change | Estado | Complejidad | Depende de |
 |---|---|---|---|---|
-| 01 | `setup-backend-core` | ✅ Completado y archivado | 🔴 Alta | — |
-| 02 | `setup-frontend-core` | ✅ Completado y archivado (2026-05-06) | 🟡 Media | — |
-| 03 | `auth-y-autorizacion` | 🔲 Pendiente | 🔴 Alta | 01, 02 |
-| 04 | `categorias-e-ingredientes` | 🔲 Pendiente | 🟡 Media | 03 |
-| 05 | `navegacion-layout-base` | 🔲 Pendiente | 🟡 Media | 02, 03 |
-| 06 | `perfil-y-direcciones` | 🔲 Pendiente | 🟡 Media | 03 |
-| 07 | `productos-y-catalogo` | 🔲 Pendiente | 🔴 Alta | 04, 05 |
-| 08 | `carrito-de-compras` | 🔲 Pendiente | 🟢 Baja | 06, 07 |
-| 09 | `creacion-de-pedidos` | 🔲 Pendiente | 🔴 Alta | 06, 08 |
-| 10 | `pagos-mercadopago` | 🔲 Pendiente | 🔴 Alta | 09 |
-| 11 | `fsm-pedidos-y-visualizacion` | 🔲 Pendiente | 🔴 Alta | 09, 10 |
-| 12 | `admin-usuarios-y-catalogo` | 🔲 Pendiente | 🟡 Media | 11 |
-| 13 | `dashboard-metricas` | 🔲 Pendiente | 🟡 Media | 11 |
+| 01 | `setup-backend-core` | ✅ Archivado (2026-04-28) | — | — |
+| 02 | `setup-frontend-core` | ✅ Archivado (2026-05-06) | — | — |
+| 03a | `auth-backend` | 🔲 Pendiente | 🟡 Media | 01 |
+| 03b | `auth-frontend` | 🔲 Pendiente | 🟡 Media | 02, 03a |
+| 04 | `categorias-e-ingredientes` | 🔲 Pendiente | 🟡 Media | 03a |
+| 05 | `navegacion-layout-base` | 🔲 Pendiente | 🟡 Media | 02, 03b |
+| 06 | `perfil-y-direcciones` | 🔲 Pendiente | 🟡 Media | 03a |
+| 07a | `productos-crud-backend` | 🔲 Pendiente | 🟡 Media | 04 |
+| 07b | `catalogo-publico` | 🔲 Pendiente | 🟡 Media | 07a, 05 |
+| 07c | `gestion-productos-stock` | 🔲 Pendiente | 🟢 Baja | 07a |
+| 08 | `carrito-de-compras` | 🔲 Pendiente | 🟢 Baja | 06, 07b |
+| 09a | `pedidos-backend` | 🔲 Pendiente | 🟡 Media | 06, 08 |
+| 09b | `checkout-frontend` | 🔲 Pendiente | 🟢 Baja | 09a |
+| 10 | `pagos-mercadopago` | 🔲 Pendiente | 🔴 Alta | 09a |
+| 11a | `fsm-backend` | 🔲 Pendiente | 🟡 Media | 09a, 10 |
+| 11b | `visualizacion-pedidos` | 🔲 Pendiente | 🟡 Media | 11a |
+| 12 | `admin-usuarios-y-catalogo` | 🔲 Pendiente | 🟡 Media | 11a |
+| 13 | `dashboard-metricas` | 🔲 Pendiente | 🟡 Media | 11a |
 
 ### Ruta Crítica
 
 ```
-01 → 03 → 04 → 07 → 08 → 09 → 10 → 11 → 12/13
+01 → 03a → 04 → 07a → 07b → 08 → 09a → 10 → 11a → 12/13
 ```
 
 ### Paralelizables
 
-- **01 y 02** — Backend y frontend setup son independientes
-- **04, 05 y 06** — Se pueden hacer en paralelo tras completar 03
-- **12 y 13** — Ambos dependen de 11 pero no entre sí
+- **03b, 04, 06** — En paralelo una vez archivado 03a
+- **05** — En paralelo con 04/06 una vez archivado 03b
+- **07b y 07c** — En paralelo una vez archivado 07a
+- **09b** — En paralelo con 10 una vez archivado 09a
+- **11b, 12, 13** — Los tres en paralelo una vez archivado 11a
 
 ---
 
-## 7. Gotchas y Descubrimientos Previos
-
-Estos son problemas encontrados durante el desarrollo que el agente debe recordar:
+## 9. Gotchas y Descubrimientos Previos
 
 | Problema | Solución |
 |---|---|
@@ -218,27 +279,78 @@ Estos son problemas encontrados durante el desarrollo que el agente debe recorda
 | SQLAlchemy necesita TODOS los modelos importados | Importar todos los modelos antes de resolver `Relationship()` cross-module |
 | `UsuarioRol` con 2 FKs a `usuarios` | Requiere `foreign_keys` explícito en la Relationship del lado inverso |
 | `HistorialEstadoPedido` FK ambiguo a `usuarios` | También necesita `foreign_keys` explícito |
+| Tailwind CSS v4 causa errores de build en Vite | Usar Tailwind v3; v4 requiere `@tailwindcss/postcss` que puede no ser compatible |
 | `npx skills` falla si SKILL.md no está en raíz del repo | Clonar manualmente y copiar la subcarpeta + actualizar `skills-lock.json` |
 
 ---
 
-## 8. Instrucciones de Arranque para el Agente
+## 10. Instrucciones de Arranque para el Agente
 
 Cuando el usuario inicie una nueva sesión de trabajo:
 
-1. **Recuperar contexto:** Ejecutar `mem_context` y `mem_search(query: "food-store")` en Engram para recuperar decisiones previas.
+1. **Recuperar contexto:** Ejecutar `mem_context` y `mem_search(query: "food store opsx", project: "RepositorioBaseFoodStore-SDD")` en Engram para recuperar decisiones previas.
 2. **Verificar estado OPSX:** Ejecutar `openspec list --json` para ver qué changes existen y su estado.
 3. **Leer este archivo:** Usar este AGENTS.md como referencia del stack, patrones y prioridades.
 4. **Consultar documentación:** Los docs del proyecto están en `docs/`:
-   - `Descripcion.txt` — Descripción integral del sistema (650 líneas)
+   - `Integrador.txt` — Spec técnica SDD v5.0 completa (ERD v5, FSM, API REST, schemas Pydantic, rúbrica)
+   - `Descripcion.txt` — Descripción integral del sistema (15 secciones)
    - `Historias_de_usuario.txt` — 77 HU con criterios de aceptación y reglas de negocio
    - `mapa_de_changes.md` — Grafo de dependencias y detalle de cada change
-5. **Identificar el siguiente change:** Consultar la tabla de la sección 6 para determinar qué sigue.
+5. **Identificar el siguiente change:** Consultar la tabla de la sección 8 para determinar qué sigue.
 6. **Cargar skills relevantes:** Antes de implementar, leer los SKILL.md de las skills que apliquen a la tarea.
 
 ---
 
-## 9. Configuración del Entorno
+## 11. Engram — Git Sync (memorias compartidas)
+
+Las memorias se comparten entre colaboradores mediante chunks comprimidos en `.engram/chunks/`.
+
+### Protocolo post-pull (MANDATORIO)
+
+El plugin de Engram ejecuta `engram sync --import` **solo al inicio de sesión**. Si se hace `git pull` después, los chunks nuevos NO se cargan automáticamente.
+
+**Siempre que hagas `git pull`, ejecutá inmediatamente:**
+
+```bash
+engram sync --import
+```
+
+### Verificar estado de sync
+
+```bash
+engram sync --status
+```
+
+### Protocolo de cierre de sesión (AUTOMÁTICO)
+
+Cuando el usuario diga "cerrar sesión", "terminar", "done", "listo" o similar, ejecutar **ANTES** de llamar a `mem_session_summary`:
+
+```bash
+# 1. Exportar memorias nuevas como chunks
+engram sync
+
+# 2. Stagear TODO: código + engram + archivos pendientes
+git add -A
+
+# 3. Verificar qué entra al commit
+git status
+
+# 4. Commitear todo junto
+git commit -m "chore: end session — sync engram memories and pending changes"
+
+# 5. Pushear al remoto
+git push
+```
+
+### Fallback si el push falla
+
+1. Informar al usuario el error
+2. NO cerrar la sesión en Engram todavía
+3. Esperar indicaciones del usuario
+
+---
+
+## 12. Configuración del Entorno
 
 ### Backend
 
@@ -271,7 +383,22 @@ npm run dev  # Puerto 5173
 
 ---
 
-## 10. Evaluación
+## 13. MCPs Configurados
+
+| MCP | Uso |
+|-----|-----|
+| `engram` | Memoria persistente entre sesiones — `mem_save`, `mem_search`, `mem_context`, `mem_session_summary` |
+| `github` | Operaciones sobre GitHub: repos, issues, PRs, branches, commits |
+| `context7` | Documentación actualizada de librerías y frameworks (FastAPI, React, SQLModel, Tailwind, etc.) |
+| `devdocs-mcp` | Lookup de documentación técnica offline (fallback local) |
+
+Configuración según el agente en uso:
+- **Antigravity (Gemini):** `~/.gemini/antigravity/mcp_config.json`
+- **OpenCode:** `.opencode/opencode.json`
+
+---
+
+## 14. Evaluación
 
 El proyecto se evalúa sobre **200 puntos** con bonificaciones:
 
