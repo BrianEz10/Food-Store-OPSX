@@ -3,6 +3,10 @@ import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
 import { RoleBasedRoute } from '@/shared/components/RoleBasedRoute';
+import { CategoryListPage } from '@/pages/admin/categorias/CategoryListPage';
+import { IngredientListPage } from '@/pages/admin/ingredientes/IngredientListPage';
+import { ProfilePage } from '@/pages/profile/ProfilePage';
+import { AddressesPage } from '@/pages/addresses/AddressesPage';
 
 const PlaceholderHome = () => (
   <div className="min-h-screen flex items-center justify-center bg-surface-50">
@@ -36,16 +40,56 @@ export const AppRouter = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/" element={<PlaceholderHome />} />
-      
-      <Route 
-        path="/dashboard/*" 
+
+      <Route
+        path="/dashboard/*"
         element={
           <ProtectedRoute>
             <RoleBasedRoute allowedRoles={['ADMIN', 'STOCK', 'PEDIDOS']}>
               <PlaceholderDashboard />
             </RoleBasedRoute>
           </ProtectedRoute>
-        } 
+        }
+      />
+
+      <Route
+        path="/admin/categorias"
+        element={
+          <ProtectedRoute>
+            <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
+              <CategoryListPage />
+            </RoleBasedRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/ingredientes"
+        element={
+          <ProtectedRoute>
+            <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
+              <IngredientListPage />
+            </RoleBasedRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/perfil"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/mis-direcciones"
+        element={
+          <ProtectedRoute>
+            <AddressesPage />
+          </ProtectedRoute>
+        }
       />
     </Routes>
   );

@@ -11,21 +11,22 @@
 ## Grafo de Dependencias
 
 ```
-                                    ┌─────────────────────────┐
-                              ┌────▶│ 04 categorias-ingredien │─────┐
-                              │     └─────────────────────────┘     │
-                              │                                     ▼
+                                     ┌─────────────────────────┐
+                               ┌────▶│ 04 categorias-          │─────┐
+                               │     │    ingredientes✅       │     │
+                               │     └─────────────────────────┘     │
+                               │                                     ▼
 ┌───────────────────┐   ┌─────┴──────────┐                ┌────────────────────┐
 │ 01 setup-backend  │──▶│ 03a auth-      │                │ 07a productos-crud │──┐
-│    core ✅        │   │     backend    │──┐             │     backend        │  │
+│    core ✅        │   │    backend✅   │──┐             │     backend        │  │
 └───────────────────┘   └────────────────┘  │             └────────────────────┘  │
                               │             │                     │               │
                               │             │                     ▼               │
                               │             │     ┌──────────────────────────┐    │
                               ▼             │     │ 07b catalogo-publico    │    │
                   ┌──────────────────────┐  │     └──────────────────────────┘    │
-                  │ 06 perfil-           │  │                     │               │
-                  │    direcciones       │──┼─────────────────────┤               ▼
+                   │ 06 perfil-           │  │                     │               │
+                   │    direcciones✅     │──┼─────────────────────┤               ▼
                   └──────────────────────┘  │                     │    ┌──────────────────┐
                               │            │                     ▼    │ 07c gestion-     │
                               │            │          ┌──────────────┐│     stock        │
@@ -52,7 +53,7 @@
                                                                   │
 ┌───────────────────┐   ┌────────────────┐                        │
 │ 02 setup-frontend │──▶│ 03b auth-      │                        │
-│    core ✅        │──▶│     frontend   │                        │
+│    core ✅        │──▶│   frontend ✅  │                        │
 └───────────────────┘   └────────┬───────┘                        │
                                  │                                │
                                  ▼                                │
@@ -101,11 +102,11 @@ Leyenda:
 |---|---|---|---|---|
 | 01 | `setup-backend-core` | US-000, 000a, 000b, 000d, 068, 074 | — | ✅ Archivado |
 | 02 | `setup-frontend-core` | US-000, 000c, 000e | — | ✅ Archivado |
-| 03a | `auth-backend` | US-001, 002, 003, 073 | 01 | 🟡 Media |
-| 03b | `auth-frontend` | US-004, 005, 006 | 02, 03a | 🟡 Media |
-| 04 | `categorias-e-ingredientes` | US-007 a 014 | 03a | 🟡 Media |
+| 03a | `auth-backend` | US-001, 002, 003, 073 | 01 | ✅ Archivado |
+| 03b | `auth-frontend` | US-004, 005, 006 | 02, 03a | ✅ Archivado |
+| 04 | `categorias-e-ingredientes` | US-007 a 014 | 03a | ✅ Archivado |
 | 05 | `navegacion-layout-base` | US-075, 076, 066, 067 | 02, 03b | 🟡 Media |
-| 06 | `perfil-y-direcciones` | US-061 a 063, 024 a 028 | 03a | 🟡 Media |
+| 06 | `perfil-y-direcciones` | US-061 a 063, 024 a 028 | 03a | ✅ Archivado |
 | 07a | `productos-crud-backend` | US-015, 016, 017 | 04 | 🟡 Media |
 | 07b | `catalogo-publico` | US-018, 019, 020, 021 | 07a, 05 | 🟡 Media |
 | 07c | `gestion-productos-stock` | US-022, 023 | 07a | 🟢 Baja |
@@ -118,7 +119,7 @@ Leyenda:
 | 12 | `admin-usuarios-y-catalogo` | US-053, 054, 055, 064, 065 | 11a | 🟡 Media |
 | 13 | `dashboard-metricas` | US-056, 057, 058, 059, 060 | 11a | 🟡 Media |
 
-**Distribución**: 0 🔴 pendientes · 1 🔴 (pagos, dominio externo) · 11 🟡 · 3 🟢 · 2 ✅ archivados
+**Distribución**: 0 🔴 pendientes · 1 🔴 (pagos, dominio externo) · 7 🟡 · 3 🟢 · 6 ✅ archivados
 
 ---
 
@@ -144,14 +145,14 @@ Leyenda:
 
 ---
 
-## Change 03a: `auth-backend`
+## Change 03a: `auth-backend` ✅ Archivado (2026-05-13)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | Módulo auth backend completo: register, login, refresh token, logout. Hashing bcrypt, JWT HS256, rotación de refresh tokens en BD, rate limiting con slowapi (5/15min), `require_role` funcional |
 | **HU** | US-001, US-002, US-003, US-073 |
 | **Depende de** | **Change 01** (modelos Usuario, Rol, UsuarioRol, RefreshToken; `get_current_user`; seed de roles) |
-| **Complejidad** | 🟡 Media |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 - Módulo `auth/`: `model.py` (ya existe), `schemas.py`, `repository.py`, `service.py`, `router.py`
@@ -163,14 +164,14 @@ Leyenda:
 
 ---
 
-## Change 03b: `auth-frontend`
+## Change 03b: `auth-frontend` ✅ Archivado (2026-05-13)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | Formularios de registro y login, integración authStore ↔ Axios interceptor, renovación transparente de access token |
 | **HU** | US-004, US-005, US-006 |
 | **Depende de** | **Change 02** (authStore, Axios instance) y **Change 03a** (endpoints auth operativos) |
-| **Complejidad** | 🟡 Media |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 - Página de Login con formulario (TanStack Form) + validación
@@ -181,14 +182,14 @@ Leyenda:
 
 ---
 
-## Change 04: `categorias-e-ingredientes`
+## Change 04: `categorias-e-ingredientes` ✅ Archivado (2026-05-13)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | CRUD completo de categorías jerárquicas (CTE recursivo) e ingredientes con flag de alérgeno — backend + frontend |
 | **HU** | US-007, US-008, US-009, US-010, US-011, US-012, US-013, US-014 |
 | **Depende de** | **Change 03a** (RBAC — endpoints requieren rol STOCK o ADMIN) |
-| **Complejidad** | 🟡 Media |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 
@@ -220,14 +221,14 @@ Leyenda:
 
 ---
 
-## Change 06: `perfil-y-direcciones`
+## Change 06: `perfil-y-direcciones` ✅ Archivado (2026-05-13)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | Gestión del perfil del cliente (ver, editar, cambiar contraseña) y CRUD completo de direcciones de entrega con dirección predeterminada — backend + frontend |
 | **HU** | US-061, US-062, US-063, US-024, US-025, US-026, US-027, US-028 |
 | **Depende de** | **Change 03a** (auth — el perfil y direcciones son datos del usuario autenticado) |
-| **Complejidad** | 🟡 Media |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 
