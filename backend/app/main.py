@@ -12,13 +12,13 @@ from slowapi.util import get_remote_address
 
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
+from app.core.rate_limit import limiter
 
 settings = get_settings()
 
 
 # ── Rate Limiter ─────────────────────────────────────────────────────
-
-limiter = Limiter(key_func=get_remote_address)
+# Importado desde app.core.rate_limit
 
 
 # ── Lifespan ─────────────────────────────────────────────────────────
@@ -66,6 +66,13 @@ app.add_middleware(
 
 # Exception handlers RFC 7807
 register_exception_handlers(app)
+
+
+# ── Routers ──────────────────────────────────────────────────────────
+
+from app.modules.auth.router import router as auth_router
+
+app.include_router(auth_router, prefix="/api/v1/auth")
 
 
 # ── Health check ─────────────────────────────────────────────────────
