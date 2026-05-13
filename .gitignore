@@ -39,3 +39,6 @@ alembic/__pycache__/
 # ── Misc ────────────────────────────────────────
 *.log
 *.sqlite3
+
+# ── Agent Skills (local) ─────────────────────────
+skills-lock.json
