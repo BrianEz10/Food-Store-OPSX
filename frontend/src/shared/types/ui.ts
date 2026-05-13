@@ -1,4 +1,14 @@
+import type { ComponentType } from 'react';
+import type { Role } from './auth';
+
 export type Theme = 'light' | 'dark' | 'system';
+
+export interface NavItem {
+  label: string;
+  path: string;
+  icon: ComponentType<{ className?: string }>;
+  roles: Role[] | ['*'];
+}
 
 export interface Toast {
   id: string;

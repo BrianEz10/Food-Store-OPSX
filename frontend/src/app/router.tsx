@@ -1,96 +1,84 @@
 import { Routes, Route } from 'react-router-dom';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
+import { HomePage } from '@/pages/home/HomePage';
+import { DashboardPage } from '@/pages/dashboard/DashboardPage';
+import { UnauthorizedPage } from '@/pages/unauthorized/UnauthorizedPage';
+import { NotFoundPage } from '@/pages/not-found/NotFoundPage';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
 import { RoleBasedRoute } from '@/shared/components/RoleBasedRoute';
 import { CategoryListPage } from '@/pages/admin/categorias/CategoryListPage';
 import { IngredientListPage } from '@/pages/admin/ingredientes/IngredientListPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
 import { AddressesPage } from '@/pages/addresses/AddressesPage';
-
-const PlaceholderHome = () => (
-  <div className="min-h-screen flex items-center justify-center bg-surface-50">
-    <div className="text-center">
-      <h1 className="text-4xl font-display font-bold text-primary-500 mb-4">
-        Food Store
-      </h1>
-      <p className="text-lg text-slate-600 font-sans">
-        Frontend Ready
-      </p>
-    </div>
-  </div>
-);
-
-const PlaceholderDashboard = () => (
-  <div className="min-h-screen flex items-center justify-center bg-blue-50">
-    <div className="text-center">
-      <h1 className="text-4xl font-display font-bold text-blue-600 mb-4">
-        Dashboard
-      </h1>
-      <p className="text-lg text-slate-600 font-sans">
-        Área administrativa
-      </p>
-    </div>
-  </div>
-);
+import { AppLayout } from '@/widgets/layout';
 
 export const AppRouter = () => {
   return (
     <Routes>
+      {/* ── Public routes (no layout) ── */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/" element={<PlaceholderHome />} />
 
-      <Route
-        path="/dashboard/*"
-        element={
-          <ProtectedRoute>
-            <RoleBasedRoute allowedRoles={['ADMIN', 'STOCK', 'PEDIDOS']}>
-              <PlaceholderDashboard />
-            </RoleBasedRoute>
-          </ProtectedRoute>
-        }
-      />
+      {/* ── Routes with AppLayout ── */}
+      <Route element={<AppLayout />}>
+        {/* Public home */}
+        <Route path="/" element={<HomePage />} />
 
-      <Route
-        path="/admin/categorias"
-        element={
-          <ProtectedRoute>
-            <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
-              <CategoryListPage />
-            </RoleBasedRoute>
-          </ProtectedRoute>
-        }
-      />
+        {/* Protected routes - any authenticated user */}
+        <Route
+          path="/perfil"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mis-direcciones"
+          element={
+            <ProtectedRoute>
+              <AddressesPage />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/admin/ingredientes"
-        element={
-          <ProtectedRoute>
-            <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
-              <IngredientListPage />
-            </RoleBasedRoute>
-          </ProtectedRoute>
-        }
-      />
+        {/* Role-based routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['ADMIN', 'STOCK', 'PEDIDOS']}>
+                <DashboardPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/categorias"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
+                <CategoryListPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/ingredientes"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
+                <IngredientListPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+      </Route>
 
-      <Route
-        path="/perfil"
-        element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/mis-direcciones"
-        element={
-          <ProtectedRoute>
-            <AddressesPage />
-          </ProtectedRoute>
-        }
-      />
+      {/* ── Error routes ── */}
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

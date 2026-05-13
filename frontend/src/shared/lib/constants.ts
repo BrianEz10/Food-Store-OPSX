@@ -1,3 +1,17 @@
+import {
+  Home,
+  User,
+  MapPin,
+  LayoutDashboard,
+  FolderTree,
+  Wheat,
+  Users,
+  ShoppingCart,
+  ClipboardList,
+  type LucideIcon,
+} from 'lucide-react';
+import type { NavItem } from '@/shared/types';
+
 export const API_ROUTES = {
   AUTH: {
     LOGIN: '/auth/token',
@@ -20,3 +34,65 @@ export const STORAGE_KEYS = {
   CART: 'food-store-cart',
   THEME: 'food-store-theme',
 } as const;
+
+/**
+ * Navigation items for the app layout.
+ * Each item defines the label, path, icon, and which roles can see it.
+ * Roles = ['*'] means visible to all (including anonymous).
+ */
+export const NAV_ITEMS: NavItem[] = [
+  {
+    label: 'Inicio',
+    path: '/',
+    icon: Home as LucideIcon,
+    roles: ['*'],
+  },
+  {
+    label: 'Dashboard',
+    path: '/dashboard',
+    icon: LayoutDashboard as LucideIcon,
+    roles: ['ADMIN', 'STOCK', 'PEDIDOS'],
+  },
+  {
+    label: 'Categorías',
+    path: '/admin/categorias',
+    icon: FolderTree as LucideIcon,
+    roles: ['STOCK', 'ADMIN'],
+  },
+  {
+    label: 'Ingredientes',
+    path: '/admin/ingredientes',
+    icon: Wheat as LucideIcon,
+    roles: ['STOCK', 'ADMIN'],
+  },
+  {
+    label: 'Carrito',
+    path: '/carrito',
+    icon: ShoppingCart as LucideIcon,
+    roles: ['CLIENT'],
+  },
+  {
+    label: 'Mis Pedidos',
+    path: '/mis-pedidos',
+    icon: ClipboardList as LucideIcon,
+    roles: ['CLIENT'],
+  },
+  {
+    label: 'Mi Perfil',
+    path: '/perfil',
+    icon: User as LucideIcon,
+    roles: ['CLIENT'],
+  },
+  {
+    label: 'Mis Direcciones',
+    path: '/mis-direcciones',
+    icon: MapPin as LucideIcon,
+    roles: ['CLIENT'],
+  },
+  {
+    label: 'Usuarios',
+    path: '/admin/usuarios',
+    icon: Users as LucideIcon,
+    roles: ['ADMIN'],
+  },
+];
