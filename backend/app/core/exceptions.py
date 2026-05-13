@@ -88,8 +88,16 @@ def _problem_response(
     status: int,
     detail: str,
     instance: str = "",
+    request: Request | None = None,
 ) -> JSONResponse:
-    """Construye una respuesta RFC 7807 (Problem Details)."""
+    """Construye una respuesta RFC 7807 (Problem Details) con headers CORS."""
+    headers = {}
+    if request:
+        origin = request.headers.get("origin")
+        if origin and origin in _get_cors_origins():
+            headers["Access-Control-Allow-Origin"] = origin
+            headers["Vary"] = "Origin"
+
     return JSONResponse(
         status_code=status,
         content={
@@ -99,8 +107,18 @@ def _problem_response(
             "detail": detail,
             "instance": instance,
         },
+        headers=headers or None,
         media_type="application/problem+json",
     )
+
+
+def _get_cors_origins() -> list[str]:
+    """Obtiene los orígenes CORS permitidos desde la configuración."""
+    try:
+        from app.core.config import get_settings
+        return get_settings().CORS_ORIGINS
+    except Exception:
+        return ["http://localhost:5173"]
 
 
 # ── Handlers ─────────────────────────────────────────────────────────
@@ -112,6 +130,7 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
         status=exc.status_code,
         detail=exc.detail,
         instance=str(request.url.path),
+        request=request,
     )
 
 
@@ -131,6 +150,7 @@ async def validation_error_handler(
         status=422,
         detail=str(errors),
         instance=str(request.url.path),
+        request=request,
     )
 
 
@@ -141,6 +161,7 @@ async def generic_error_handler(request: Request, exc: Exception) -> JSONRespons
         status=500,
         detail="Error interno del servidor",
         instance=str(request.url.path),
+        request=request,
     )
 
 

@@ -37,6 +37,7 @@ class Categoria(SQLModel, table=True):
         default=None,
         foreign_key="categorias.id",
     )
+    orden: int = Field(default=0)
 
     # Soft delete
     eliminado_en: datetime | None = Field(
