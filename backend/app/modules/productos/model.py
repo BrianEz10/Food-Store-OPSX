@@ -11,6 +11,7 @@ from sqlmodel import Field, Relationship, SQLModel
 if TYPE_CHECKING:
     from app.modules.categorias.model import Categoria
     from app.modules.pedidos.model import DetallePedido
+    from app.modules.ingredientes.model import Ingrediente
 
 
 # ── ProductoCategoria (tabla pivote) ─────────────────────────────────
@@ -79,52 +80,8 @@ class ProductoIngrediente(SQLModel, table=True):
 # ── Ingrediente ──────────────────────────────────────────────────────
 
 
-class Ingrediente(SQLModel, table=True):
-    """
-    Ingrediente de un producto.
-    es_alergeno=True indica que es un alérgeno y debe mostrarse prominentemente.
-    """
 
-    __tablename__ = "ingredientes"
 
-    id: int | None = Field(default=None, primary_key=True)
-    nombre: str = Field(
-        sa_column=sa.Column(sa.String(100), unique=True, nullable=False),
-    )
-    es_alergeno: bool = Field(
-        default=False,
-        sa_column=sa.Column(sa.Boolean, nullable=False, server_default=sa.text("false")),
-    )
-
-    # Soft delete
-    eliminado_en: datetime | None = Field(
-        default=None,
-        sa_column=sa.Column(sa.DateTime(timezone=True), nullable=True),
-    )
-
-    # Auditoría
-    creado_en: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=sa.Column(
-            sa.DateTime(timezone=True),
-            nullable=False,
-            server_default=sa.text("now()"),
-        ),
-    )
-    actualizado_en: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=sa.Column(
-            sa.DateTime(timezone=True),
-            nullable=False,
-            server_default=sa.text("now()"),
-            onupdate=sa.text("now()"),
-        ),
-    )
-
-    # Relaciones
-    producto_ingredientes: list["ProductoIngrediente"] = Relationship(
-        back_populates="ingrediente",
-    )
 
 
 # ── Producto ─────────────────────────────────────────────────────────

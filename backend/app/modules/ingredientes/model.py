@@ -22,7 +22,7 @@ class Ingrediente(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     nombre: str = Field(
-        sa_column=sa.Column(sa.String(100), nullable=False),
+        sa_column=sa.Column(sa.String(100), unique=True, nullable=False),
     )
     descripcion: str | None = Field(
         default=None,
