@@ -1,5 +1,6 @@
 import {
   Home,
+  Store,
   User,
   MapPin,
   LayoutDashboard,
@@ -42,6 +43,12 @@ export const STORAGE_KEYS = {
  */
 export const NAV_ITEMS: NavItem[] = [
   {
+    label: 'Catálogo',
+    path: '/catalogo',
+    icon: Store as LucideIcon,
+    roles: ['*'],
+  },
+  {
     label: 'Inicio',
     path: '/',
     icon: Home as LucideIcon,
@@ -63,6 +70,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Ingredientes',
     path: '/admin/ingredientes',
     icon: Wheat as LucideIcon,
+    roles: ['STOCK', 'ADMIN'],
+  },
+  {
+    label: 'Productos',
+    path: '/admin/productos',
+    icon: Package as LucideIcon,
     roles: ['STOCK', 'ADMIN'],
   },
   {

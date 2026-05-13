@@ -9,8 +9,11 @@ import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
 import { RoleBasedRoute } from '@/shared/components/RoleBasedRoute';
 import { CategoryListPage } from '@/pages/admin/categorias/CategoryListPage';
 import { IngredientListPage } from '@/pages/admin/ingredientes/IngredientListPage';
+import { ProductListPage, ProductFormPage } from '@/pages/admin/productos';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
 import { AddressesPage } from '@/pages/addresses/AddressesPage';
+import { CatalogPage } from '@/pages/catalogo/CatalogPage';
+import { ProductDetailPage } from '@/pages/producto/ProductDetailPage';
 import { AppLayout } from '@/widgets/layout';
 
 export const AppRouter = () => {
@@ -24,6 +27,10 @@ export const AppRouter = () => {
       <Route element={<AppLayout />}>
         {/* Public home */}
         <Route path="/" element={<HomePage />} />
+
+        {/* Public catalog */}
+        <Route path="/catalogo" element={<CatalogPage />} />
+        <Route path="/producto/:id" element={<ProductDetailPage />} />
 
         {/* Protected routes - any authenticated user */}
         <Route
@@ -70,6 +77,36 @@ export const AppRouter = () => {
             <ProtectedRoute>
               <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
                 <IngredientListPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/productos"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
+                <ProductListPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/productos/nuevo"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
+                <ProductFormPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/productos/:productoId/editar"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
+                <ProductFormPage />
               </RoleBasedRoute>
             </ProtectedRoute>
           }

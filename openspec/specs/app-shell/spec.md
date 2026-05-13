@@ -39,27 +39,27 @@ El sistema SHALL proporcionar un sistema de navegación que filtre los items del
 #### Scenario: Items visibles para CLIENT
 
 - **WHEN** un usuario con rol `CLIENT` está autenticado
-- **THEN** el menú muestra: Inicio, Mi Perfil, Mis Direcciones
+- **THEN** el menú muestra: Catálogo, Inicio, Mi Perfil, Mis Direcciones
 
 #### Scenario: Items visibles para STOCK
 
 - **WHEN** un usuario con rol `STOCK` está autenticado
-- **THEN** el menú muestra: Inicio, Categorías, Ingredientes, Dashboard
+- **THEN** el menú muestra: Catálogo, Inicio, Categorías, Ingredientes, Dashboard
 
 #### Scenario: Items visibles para PEDIDOS
 
 - **WHEN** un usuario con rol `PEDIDOS` está autenticado
-- **THEN** el menú muestra: Inicio, Dashboard
+- **THEN** el menú muestra: Catálogo, Inicio, Dashboard
 
 #### Scenario: Items visibles para ADMIN
 
 - **WHEN** un usuario con rol `ADMIN` está autenticado
-- **THEN** el menú muestra: Inicio, Dashboard, Categorías, Ingredientes, Usuarios
+- **THEN** el menú muestra: Catálogo, Inicio, Dashboard, Categorías, Ingredientes, Usuarios
 
 #### Scenario: Items visibles para usuarios anónimos
 
 - **WHEN** el usuario no está autenticado
-- **THEN** el menú muestra solo Inicio
+- **THEN** el menú muestra: Catálogo, Inicio
 
 #### Scenario: Item activo resaltado
 
@@ -104,5 +104,34 @@ El sistema SHALL reemplazar los placeholders inline del router con componentes d
 - **WHEN** un usuario con rol ADMIN/STOCK/PEDIDOS accede a `/dashboard`
 - **THEN** se renderiza `DashboardPage` con un placeholder (funcionalidad real en Change 13)
 
+### Requirement: Rutas públicas del catálogo
+
+El sistema SHALL incluir las rutas `/catalogo` y `/producto/:id` como rutas públicas dentro del AppLayout, accesibles por cualquier usuario.
+
+#### Scenario: Ruta /catalogo accesible públicamente
+
+- **WHEN** cualquier usuario (autenticado o no) accede a `/catalogo`
+- **THEN** la página se renderiza dentro de AppLayout con la navegación persistente
+
+#### Scenario: Ruta /producto/:id accesible públicamente
+
+- **WHEN** cualquier usuario accede a `/producto/5`
+- **THEN** la página se renderiza dentro de AppLayout con la navegación persistente
+
+### Requirement: Enlace "Catálogo" en el menú de navegación
+
+El sistema SHALL incluir el enlace "Catálogo" como item en el menú de navegación del AppLayout, visible para todos los roles (incluyendo usuarios anónimos).
+
+#### Scenario: Item visible para todos los roles
+
+- **WHEN** un usuario con cualquier rol (CLIENT, STOCK, PEDIDOS, ADMIN) o sin autenticar ve el menú
+- **THEN** el item "Catálogo" aparece como opción en la navegación
+
+#### Scenario: Item activo resaltado
+
+- **WHEN** el usuario está en `/catalogo` o `/producto/:id`
+- **THEN** el item "Catálogo" se muestra visualmente como activo
+
 ## Changelog
 - 2026-05-13: Created initial spec for navegacion-layout-base change
+- 2026-05-13: Added catalog routes and nav item for catalogo-publico change

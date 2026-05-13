@@ -72,6 +72,22 @@
       "sessions": 3,
       "memories": 3,
       "prompts": 10
+    },
+    {
+      "id": "6faab432",
+      "created_by": "brian-palacios",
+      "created_at": "2026-05-13T19:56:36Z",
+      "sessions": 1,
+      "memories": 3,
+      "prompts": 16
+    },
+    {
+      "id": "d8542f95",
+      "created_by": "brian-palacios",
+      "created_at": "2026-05-13T19:56:44Z",
+      "sessions": 0,
+      "memories": 2,
+      "prompts": 0
     }
   ]
 }
