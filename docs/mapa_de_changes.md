@@ -11,45 +11,45 @@
 ## Grafo de Dependencias
 
 ```
-                                     ┌─────────────────────────┐
-                               ┌────▶│ 04 categorias-          │─────┐
-                               │     │    ingredientes✅       │     │
-                               │     └─────────────────────────┘     │
-                               │                                     ▼
+                                    ┌─────────────────────────┐
+                              ┌────▶│ 04 categorias-          │─────┐
+                              │     │    ingredientes✅       │     │
+                              │     └─────────────────────────┘     │
+                              │                                     ▼
 ┌───────────────────┐   ┌─────┴──────────┐                ┌────────────────────┐
-│ 01 setup-backend  │──▶│ 03a auth-      │                │ 07a productos-crud✅│──┐
+│ 01 setup-backend  │──▶│ 03a auth-      │                │07a productos-crud✅│──┐
 │    core ✅        │   │    backend✅   │──┐             │     backend        │  │
 └───────────────────┘   └────────────────┘  │             └────────────────────┘  │
                               │             │                     │               │
                               │             │                     ▼               │
                               │             │     ┌──────────────────────────┐    │
-                              ▼             │     │ 07b catalogo-publico    │    │
+                              ▼             │     │ 07b catalogo-publico     │    │
                   ┌──────────────────────┐  │     └──────────────────────────┘    │
-                   │ 06 perfil-           │  │                     │               │
-                   │    direcciones✅     │──┼─────────────────────┤               ▼
+                  │ 06 perfil-           │  │                     │               │
+                  │   direcciones✅      │──┼─────────────────────┤               ▼
                   └──────────────────────┘  │                     │    ┌──────────────────┐
-                              │            │                     ▼    │ 07c gestion-     │
-                              │            │          ┌──────────────┐│     stock        │
-                              │            │          │ 08 carrito   │└──────────────────┘
-                              ▼            │          │    compras   │
-                  ┌──────────────────────┐ │          └──────┬───────┘
-                  │ 09a pedidos-backend  │◀┘                 │
-                  │                      │◀──────────────────┘
+                              │             │                     ▼    │ 07c gestion-     │
+                              │             │          ┌──────────────┐│     stock        │
+                              │             │          │ 08 carrito   │└──────────────────┘
+                              ▼             │          │    compras   │
+                  ┌──────────────────────┐  │          └──────┬───────┘
+                  │ 09a pedidos-backend  │◀─┘                 │
+                  │                      │◀───────────────────┘
                   └──────────┬───────────┘
                        ┌─────┼──────────────────────┐
                        │     │                      │
                        ▼     ▼                      ▼
           ┌──────────────┐ ┌───────────────┐ ┌────────────────┐
-          │ 09b checkout │ │ 10 pagos-     │ │ 11a fsm-       │◀─┐
+          │ 09b checkout │ │ 10 pagos-     │ │ 11a fsm-       │◀──┐
           │     frontend │ │    mercadopago│─┘│     backend    │  │
           └──────────────┘ └───────────────┘  └───────┬────────┘  │
                                                  ┌────┼────┐      │
                                                  │    │    │      │
                                                  ▼    ▼    ▼      │
-                                     ┌───────┐┌──────┐┌──────┐   │
-                                     │ 11b   ││ 12   ││ 13   │   │
-                                     │visual.││admin ││dashb.│   │
-                                     └───────┘└──────┘└──────┘   │
+                                     ┌───────┐┌──────┐┌──────┐    │
+                                     │ 11b   ││ 12   ││ 13   │    │
+                                     │visual.││admin ││dashb.│    │
+                                     └───────┘└──────┘└──────┘    │
                                                                   │
 ┌───────────────────┐   ┌────────────────┐                        │
 │ 02 setup-frontend │──▶│ 03b auth-      │                        │
@@ -59,7 +59,7 @@
                                  ▼                                │
                         ┌────────────────┐                        │
                         │ 05 navegacion- │────────────────────────┘
-                        │    layout-base✅│
+                        │   layout-base✅│
                         └────────────────┘
 
 Leyenda:
@@ -203,14 +203,14 @@ Leyenda:
 
 ---
 
-## Change 05: `navegacion-layout-base` ✅ Archivado (2026-05-13)
+## Change 05: `navegacion-layout-base`
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | Layout principal, navegación adaptada por rol, protección de rutas frontend, manejo global de errores HTTP |
 | **HU** | US-075, US-076, US-066, US-067 |
 | **Depende de** | **Change 02** (FSD, authStore, uiStore) y **Change 03b** (auth funcional, roles en JWT) |
-| **Complejidad** | ✅ Archivado |
+| **Complejidad** | 🟡 Media |
 
 **Entregables:**
 - Layout principal con sidebar/navbar responsive
@@ -242,14 +242,14 @@ Leyenda:
 
 ---
 
-## Change 07a: `productos-crud-backend` ✅ Archivado (2026-05-13)
+## Change 07a: `productos-crud-backend`
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | CRUD completo de productos en el backend: creación, edición, soft delete, asociación M2M con categorías e ingredientes, gestión de stock y disponibilidad |
 | **HU** | US-015, US-016, US-017 |
 | **Depende de** | **Change 04** (categorías e ingredientes deben existir para asociarlos) |
-| **Complejidad** | ✅ Archivado |
+| **Complejidad** | 🟡 Media |
 
 **Entregables:**
 - Módulo `productos/`: `model.py` (ya existe), `schemas.py`, `repository.py`, `service.py`, `router.py`
