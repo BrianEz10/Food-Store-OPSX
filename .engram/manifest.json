@@ -64,6 +64,14 @@
       "sessions": 1,
       "memories": 6,
       "prompts": 15
+    },
+    {
+      "id": "26324cd4",
+      "created_by": "brian-palacios",
+      "created_at": "2026-05-13T19:16:32Z",
+      "sessions": 3,
+      "memories": 3,
+      "prompts": 10
     }
   ]
 }
