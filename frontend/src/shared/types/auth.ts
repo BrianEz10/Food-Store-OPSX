@@ -11,14 +11,14 @@ export interface User {
 
 export interface LoginCredentials {
   email: string;
-  password_plain: string;
+  password: string;
 }
 
 export interface RegisterData {
   nombre: string;
   apellido: string;
   email: string;
-  password_plain: string;
+  password: string;
   telefono?: string;
 }
 
@@ -26,4 +26,5 @@ export interface TokenPair {
   access_token: string;
   refresh_token: string;
   token_type: string;
+  expires_in?: number;
 }

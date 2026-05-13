@@ -1,7 +1,8 @@
-## ADDED Requirements
-
+## Purpose
+Definir la arquitectura de estado en el cliente (frontend) utilizando Zustand, asegurando la separación de dominios (auth, cart, payment, ui) y el comportamiento esperado ante recargas y cierres de sesión.
+## Requirements
 ### Requirement: authStore — Estado de autenticación
-El sistema SHALL proveer un store Zustand `authStore` que gestione el estado de autenticación del usuario.
+El sistema SHALL proveer un store Zustand `authStore` que gestione el estado de autenticación del usuario. El store interactuará con Axios para acciones como el logout.
 
 #### Scenario: Estado inicial
 - **WHEN** la app inicia sin sesión previa
@@ -17,11 +18,11 @@ El sistema SHALL proveer un store Zustand `authStore` que gestione el estado de 
 
 #### Scenario: Logout
 - **WHEN** se invoca `logout()`
-- **THEN** todos los campos se resetean a su estado inicial y `isAuthenticated` se vuelve `false`
+- **THEN** realiza opcionalmente la petición de logout al backend, todos los campos se resetean a su estado inicial y `isAuthenticated` se vuelve `false`.
 
-#### Scenario: Sin persistencia localStorage
-- **WHEN** se cierra y reabre el navegador
-- **THEN** el authStore está en estado inicial (los tokens se restaurarán vía refresh token en Change 03)
+#### Scenario: Inicialización de sesión al cargar app
+- **WHEN** se invoca `initialize()` al iniciar la app
+- **THEN** si hay tokens guardados (ej. en memoria o temporales antes del refresco automático), intenta recuperar el usuario.
 
 ### Requirement: cartStore — Estado del carrito
 El sistema SHALL proveer un store Zustand `cartStore` con persistencia en localStorage para gestionar el carrito de compras.
@@ -95,3 +96,4 @@ El sistema SHALL proveer un store Zustand `uiStore` para gestionar el estado vis
 #### Scenario: Persistencia parcial del tema
 - **WHEN** se recarga la página
 - **THEN** el tema se restaura desde localStorage pero `sidebarOpen`, `toasts` y `activeModal` vuelven a sus defaults
+
