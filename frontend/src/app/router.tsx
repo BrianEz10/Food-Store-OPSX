@@ -14,6 +14,7 @@ import { ProfilePage } from '@/pages/profile/ProfilePage';
 import { AddressesPage } from '@/pages/addresses/AddressesPage';
 import { CatalogPage } from '@/pages/catalogo/CatalogPage';
 import { ProductDetailPage } from '@/pages/producto/ProductDetailPage';
+import { CartPage } from '@/pages/cart/CartPage';
 import { AppLayout } from '@/widgets/layout';
 
 export const AppRouter = () => {
@@ -46,6 +47,14 @@ export const AppRouter = () => {
           element={
             <ProtectedRoute>
               <AddressesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/carrito"
+          element={
+            <ProtectedRoute>
+              <CartPage />
             </ProtectedRoute>
           }
         />

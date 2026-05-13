@@ -23,12 +23,12 @@
                               │             │                     │               │
                               │             │                     ▼               │
                               │             │     ┌──────────────────────────┐    │
-                              ▼             │     │ 07b catalogo-publico     │    │
+                              ▼             │     │ 07b catalogo-publico✅   │    │
                   ┌──────────────────────┐  │     └──────────────────────────┘    │
                   │ 06 perfil-           │  │                     │               │
                   │   direcciones✅      │──┼─────────────────────┤               ▼
                   └──────────────────────┘  │                     │    ┌──────────────────┐
-                              │             │                     ▼    │ 07c gestion-     │
+                              │             │                     ▼    │ 07c gestion-✅   │
                               │             │          ┌──────────────┐│     stock        │
                               │             │          │ 08 carrito   │└──────────────────┘
                               ▼             │          │    compras   │
@@ -108,9 +108,9 @@ Leyenda:
 | 05 | `navegacion-layout-base` | US-075, 076, 066, 067 | 02, 03b | ✅ Archivado |
 | 06 | `perfil-y-direcciones` | US-061 a 063, 024 a 028 | 03a | ✅ Archivado |
 | 07a | `productos-crud-backend` | US-015, 016, 017 | 04 | ✅ Archivado |
-| 07b | `catalogo-publico` | US-018, 019, 020, 021 | 07a, 05 | 🟡 Media |
-| 07c | `gestion-productos-stock` | US-022, 023 | 07a | 🟢 Baja |
-| 08 | `carrito-de-compras` | US-029 a 034 | 06, 07b | 🟢 Baja |
+| 07b | `catalogo-publico` | US-018, 019, 020, 021 | 07a, 05 | ✅ Archivado |
+| 07c | `gestion-productos-stock` | US-022, 023 | 07a | ✅ Archivado |
+| 08 | `carrito-de-compras` | US-029 a 034 | 06, 07b | ✅ Archivado |
 | 09a | `pedidos-backend` | US-035, 036, 037, 069, 070 | 06, 08 | 🟡 Media |
 | 09b | `checkout-frontend` | US-038, 071 | 09a | 🟢 Baja |
 | 10 | `pagos-mercadopago` | US-045, 046, 047, 048, 072 | 09a | 🔴 Alta |
@@ -119,7 +119,7 @@ Leyenda:
 | 12 | `admin-usuarios-y-catalogo` | US-053, 054, 055, 064, 065 | 11a | 🟡 Media |
 | 13 | `dashboard-metricas` | US-056, 057, 058, 059, 060 | 11a | 🟡 Media |
 
-**Distribución**: 0 🔴 pendientes · 1 🔴 (pagos, dominio externo) · 6 🟡 · 3 🟢 · 8 ✅ archivados
+**Distribución**: 1 🔴 · 5 🟡 · 1 🟢 · 11 ✅ archivados
 
 ---
 
@@ -203,14 +203,14 @@ Leyenda:
 
 ---
 
-## Change 05: `navegacion-layout-base`
+## Change 05: `navegacion-layout-base` ✅ Archivado (2026-05-13)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | Layout principal, navegación adaptada por rol, protección de rutas frontend, manejo global de errores HTTP |
 | **HU** | US-075, US-076, US-066, US-067 |
 | **Depende de** | **Change 02** (FSD, authStore, uiStore) y **Change 03b** (auth funcional, roles en JWT) |
-| **Complejidad** | 🟡 Media |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 - Layout principal con sidebar/navbar responsive
@@ -242,14 +242,14 @@ Leyenda:
 
 ---
 
-## Change 07a: `productos-crud-backend`
+## Change 07a: `productos-crud-backend` ✅ Archivado (2026-05-13)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | CRUD completo de productos en el backend: creación, edición, soft delete, asociación M2M con categorías e ingredientes, gestión de stock y disponibilidad |
 | **HU** | US-015, US-016, US-017 |
 | **Depende de** | **Change 04** (categorías e ingredientes deben existir para asociarlos) |
-| **Complejidad** | 🟡 Media |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 - Módulo `productos/`: `model.py` (ya existe), `schemas.py`, `repository.py`, `service.py`, `router.py`
@@ -260,14 +260,14 @@ Leyenda:
 
 ---
 
-## Change 07b: `catalogo-publico`
+## Change 07b: `catalogo-publico` ✅ Archivado (2026-05-13)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | Catálogo público de productos con paginación, filtros, búsqueda por nombre, filtro por alérgenos y vista de detalle — backend + frontend |
 | **HU** | US-018, US-019, US-020, US-021 |
 | **Depende de** | **Change 07a** (productos deben existir en BD) y **Change 05** (layout para las vistas) |
-| **Complejidad** | 🟡 Media |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 
@@ -281,14 +281,14 @@ Leyenda:
 
 ---
 
-## Change 07c: `gestion-productos-stock`
+## Change 07c: `gestion-productos-stock` ✅ Archivado (2026-05-13)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | Panel de gestión de productos y stock para roles STOCK/ADMIN — 100% frontend |
 | **HU** | US-022, US-023 |
 | **Depende de** | **Change 07a** (endpoints de gestión operativos) |
-| **Complejidad** | 🟢 Baja |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 - Panel de gestión de productos (STOCK/ADMIN): formulario con asociación de categorías e ingredientes
@@ -296,7 +296,7 @@ Leyenda:
 
 ---
 
-## Change 08: `carrito-de-compras`
+## Change 08: `carrito-de-compras` ✅ Archivado (2026-05-13)
 
 | Campo | Valor |
 |---|---|

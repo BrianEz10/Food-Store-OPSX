@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { cn } from '@/shared/lib';
 import { useUIStore } from '@/shared/stores';
+import { CartDrawer } from '@/widgets/cart';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
@@ -9,11 +10,15 @@ import { BottomNav } from './BottomNav';
 export function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-surface-900">
       {/* Header */}
-      <Header onToggleSidebar={() => setSidebarCollapsed((prev) => !prev)} />
+      <Header
+        onToggleSidebar={() => setSidebarCollapsed((prev) => !prev)}
+        onCartClick={() => setCartOpen(true)}
+      />
 
       {/* Sidebar (desktop) */}
       <Sidebar
@@ -39,6 +44,9 @@ export function AppLayout() {
 
       {/* Bottom Nav (mobile) */}
       <BottomNav open={moreOpen} onOpenChange={setMoreOpen} />
+
+      {/* Cart drawer */}
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 }

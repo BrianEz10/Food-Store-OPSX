@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ImageOff, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ImageOff, AlertTriangle, ShoppingCart } from 'lucide-react';
 import { useProduct } from '@/entities/product';
 import { cn } from '@/shared/lib';
+import { useCartStore, useUIStore } from '@/shared/stores';
 
 function DetailSkeleton() {
   return (
@@ -97,6 +99,27 @@ export function ProductDetailPage() {
   }
 
   const { nombre, descripcion, imagen_url, precio_base, categorias, ingredientes } = product;
+  const addItem = useCartStore((s) => s.addItem);
+  const addToast = useUIStore((s) => s.addToast);
+  const [selectedExclusiones, setSelectedExclusiones] = useState<number[]>([]);
+
+  const toggleExclusion = (ingId: number) => {
+    setSelectedExclusiones((prev) =>
+      prev.includes(ingId) ? prev.filter((id) => id !== ingId) : [...prev, ingId]
+    );
+  };
+
+  const handleAddToCart = () => {
+    addItem({
+      productoId: product.id,
+      nombre: product.nombre,
+      precio: product.precio_base,
+      cantidad: 1,
+      imagenUrl: product.imagen_url || '',
+      exclusiones: selectedExclusiones,
+    });
+    addToast({ type: 'success', message: 'Producto agregado al carrito' });
+  };
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -203,6 +226,54 @@ export function ProductDetailPage() {
               </p>
             </div>
           )}
+
+          {/* Customization: removable ingredients */}
+          {ingredientes && ingredientes.some((ing) => ing.es_removible) && (
+            <div>
+              <h2 className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+                Personalizar producto
+              </h2>
+              <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+                Desmarcá los ingredientes que querés excluir
+              </p>
+              <div className="space-y-1.5">
+                {ingredientes
+                  .filter((ing) => ing.es_removible)
+                  .map((ing) => (
+                    <label
+                      key={ing.id}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!selectedExclusiones.includes(ing.id)}
+                        onChange={() => toggleExclusion(ing.id)}
+                        className="size-4 rounded border-slate-300 text-primary-500 focus:ring-primary-500 dark:border-slate-600"
+                      />
+                      <span className="text-slate-700 dark:text-slate-300">{ing.nombre}</span>
+                      {ing.es_alergeno && (
+                        <span className="ml-auto rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                          Alérgeno
+                        </span>
+                      )}
+                    </label>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Add to cart button */}
+          <button
+            onClick={handleAddToCart}
+            className={cn(
+              'mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg',
+              'bg-primary-500 px-6 py-3 text-sm font-semibold text-white',
+              'hover:bg-primary-600 transition-colors',
+            )}
+          >
+            <ShoppingCart className="size-5" />
+            Agregar al carrito — ${precio_base.toFixed(2)}
+          </button>
         </div>
       </div>
     </div>

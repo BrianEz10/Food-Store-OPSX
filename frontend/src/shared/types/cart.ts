@@ -1,10 +1,11 @@
 export interface CartItem {
-  productId: number;
+  productoId: number;
   nombre: string;
   precio: number;
   cantidad: number;
   imagenUrl?: string;
-  personalizacion?: number[];
+  exclusiones: number[];
+  stockDisponible?: boolean;
 }
 
 export interface CartState {

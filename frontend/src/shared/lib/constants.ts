@@ -9,6 +9,7 @@ import {
   Users,
   ShoppingCart,
   ClipboardList,
+  Package,
   type LucideIcon,
 } from 'lucide-react';
 import type { NavItem } from '@/shared/types';

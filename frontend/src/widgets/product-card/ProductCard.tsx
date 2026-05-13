@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ImageOff } from 'lucide-react';
+import { ImageOff, ShoppingCart } from 'lucide-react';
 import { cn } from '@/shared/lib';
+import { useCartStore, useUIStore } from '@/shared/stores';
 import type { ProductListItem } from '@/entities/product';
 
 interface ProductCardProps {
@@ -9,6 +10,22 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { id, nombre, descripcion, imagen_url, precio_base } = product;
+  const addItem = useCartStore((s) => s.addItem);
+  const addToast = useUIStore((s) => s.addToast);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      productoId: id,
+      nombre,
+      precio: precio_base,
+      cantidad: 1,
+      imagenUrl: imagen_url || '',
+      exclusiones: [],
+    });
+    addToast({ type: 'success', message: 'Producto agregado al carrito' });
+  };
 
   return (
     <Link
@@ -32,6 +49,18 @@ export function ProductCard({ product }: ProductCardProps) {
             <ImageOff className="size-10" />
           </div>
         )}
+        <button
+          onClick={handleAddToCart}
+          className={cn(
+            'absolute bottom-2 right-2 inline-flex items-center gap-1.5 rounded-full',
+            'bg-primary-500 px-3 py-1.5 text-xs font-medium text-white shadow',
+            'hover:bg-primary-600 transition-colors',
+            'opacity-0 group-hover:opacity-100',
+          )}
+        >
+          <ShoppingCart className="size-3.5" />
+          Agregar
+        </button>
       </div>
 
       {/* Info */}
