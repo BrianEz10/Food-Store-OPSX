@@ -111,15 +111,15 @@ Leyenda:
 | 07b | `catalogo-publico` | US-018, 019, 020, 021 | 07a, 05 | ✅ Archivado |
 | 07c | `gestion-productos-stock` | US-022, 023 | 07a | ✅ Archivado |
 | 08 | `carrito-de-compras` | US-029 a 034 | 06, 07b | ✅ Archivado |
-| 09a | `pedidos-backend` | US-035, 036, 037, 069, 070 | 06, 08 | 🟡 Media |
-| 09b | `checkout-frontend` | US-038, 071 | 09a | 🟢 Baja |
-| 10 | `pagos-mercadopago` | US-045, 046, 047, 048, 072 | 09a | 🔴 Alta |
-| 11a | `fsm-backend` | US-039, 040, 041, 042, 043, 044 | 09a, 10 | 🟡 Media |
+| 09a | `pedidos-backend` | US-035, 036, 037, 069, 070 | 06, 08 | ✅ Archivado |
+| 09b | `checkout-frontend` | US-038, 071 | 09a | ✅ Archivado |
+| 10 | `pagos-mercadopago` | US-045, 046, 047, 048, 072 | 09a | ✅ Archivado |
+| 11a | `fsm-backend` | US-039, 040, 041, 042, 043, 044 | 09a, 10 | ✅ Archivado |
 | 11b | `visualizacion-pedidos` | US-049, 050, 051, 052 | 11a | 🟡 Media |
 | 12 | `admin-usuarios-y-catalogo` | US-053, 054, 055, 064, 065 | 11a | 🟡 Media |
 | 13 | `dashboard-metricas` | US-056, 057, 058, 059, 060 | 11a | 🟡 Media |
 
-**Distribución**: 1 🔴 · 5 🟡 · 1 🟢 · 11 ✅ archivados
+**Distribución**: 0 🔴 · 3 🟡 · 0 🟢 · 19 ✅ archivados
 
 ---
 

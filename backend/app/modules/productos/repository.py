@@ -125,3 +125,28 @@ class ProductoRepository(BaseRepository[Producto]):
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_many_with_lock(self, ids: list[int]) -> list[Producto]:
+        """
+        Obtiene múltiples productos bloqueándolos para actualización (SELECT FOR UPDATE).
+        Ordena por ID para prevenir deadlocks.
+        """
+        if not ids:
+            return []
+
+        # Ordenar ids para evitar deadlocks
+        sorted_ids = sorted(list(set(ids)))
+
+        stmt = (
+            self._base_query()
+            .where(Producto.id.in_(sorted_ids))
+            .order_by(Producto.id)
+            .with_for_update()
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+    async def get_by_id_with_lock(self, id: int) -> Producto | None:
+        """Obtiene un producto bloqueándolo para actualización."""
+        stmt = self._base_query().where(Producto.id == id).with_for_update()
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()

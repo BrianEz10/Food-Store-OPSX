@@ -15,6 +15,12 @@ import { AddressesPage } from '@/pages/addresses/AddressesPage';
 import { CatalogPage } from '@/pages/catalogo/CatalogPage';
 import { ProductDetailPage } from '@/pages/producto/ProductDetailPage';
 import { CartPage } from '@/pages/cart/CartPage';
+import { CheckoutPage } from '@/pages/checkout/CheckoutPage';
+import { CheckoutSuccessPage } from '@/pages/checkout/CheckoutSuccessPage';
+import { PagoPage } from '@/pages/pago/PagoPage';
+import { PagoSuccessPage } from '@/pages/pago/PagoSuccessPage';
+import { PagoFailurePage } from '@/pages/pago/PagoFailurePage';
+import { PagoPendingPage } from '@/pages/pago/PagoPendingPage';
 import { AppLayout } from '@/widgets/layout';
 
 export const AppRouter = () => {
@@ -58,6 +64,33 @@ export const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout/success/:id"
+          element={
+            <ProtectedRoute>
+              <CheckoutSuccessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pago/:pedidoId"
+          element={
+            <ProtectedRoute>
+              <PagoPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/pago/success" element={<PagoSuccessPage />} />
+        <Route path="/pago/failure" element={<PagoFailurePage />} />
+        <Route path="/pago/pending" element={<PagoPendingPage />} />
 
         {/* Role-based routes */}
         <Route
