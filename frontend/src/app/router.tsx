@@ -24,6 +24,7 @@ import { PagoPendingPage } from '@/pages/pago/PagoPendingPage';
 import { MisPedidosPage } from '@/pages/pedidos/MisPedidosPage';
 import { PedidoDetailPage } from '@/pages/pedidos/PedidoDetailPage';
 import { AdminPedidosPage } from '@/pages/admin/pedidos/AdminPedidosPage';
+import { AdminUsuariosPage } from '@/pages/admin/usuarios/AdminUsuariosPage';
 import { AppLayout } from '@/widgets/layout';
 
 export const AppRouter = () => {
@@ -170,6 +171,16 @@ export const AppRouter = () => {
             <ProtectedRoute>
               <RoleBasedRoute allowedRoles={['PEDIDOS', 'ADMIN']}>
                 <AdminPedidosPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/usuarios"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['ADMIN']}>
+                <AdminUsuariosPage />
               </RoleBasedRoute>
             </ProtectedRoute>
           }

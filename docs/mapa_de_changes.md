@@ -116,10 +116,10 @@ Leyenda:
 | 10 | `pagos-mercadopago` | US-045, 046, 047, 048, 072 | 09a | ✅ Archivado |
 | 11a | `fsm-backend` | US-039, 040, 041, 042, 043, 044 | 09a, 10 | ✅ Archivado |
 | 11b | `visualizacion-pedidos` | US-049, 050, 051, 052 | 11a | ✅ Archivado |
-| 12 | `admin-usuarios-y-catalogo` | US-053, 054, 055, 064, 065 | 11a | 🟡 Media |
+| 12 | `admin-usuarios-y-catalogo` | US-053, 054, 055, 064, 065 | 11a | ✅ Archivado |
 | 13 | `dashboard-metricas` | US-056, 057, 058, 059, 060 | 11a | 🟡 Media |
 
-**Distribución**: 0 🔴 · 2 🟡 · 0 🟢 · 20 ✅ archivados
+**Distribución**: 0 🔴 · 1 🟡 · 0 🟢 · 21 ✅ archivados
 
 ---
 
@@ -412,14 +412,14 @@ Leyenda:
 
 ---
 
-## Change 12: `admin-usuarios-y-catalogo`
+## Change 12: `admin-usuarios-y-catalogo` ✅ Archivado (2026-05-14)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | Panel de administración de usuarios (listar, editar roles, desactivar) y acceso Admin a gestión de catálogo y pedidos |
 | **HU** | US-053, US-054, US-055, US-064, US-065 |
 | **Depende de** | **Change 11a** |
-| **Complejidad** | 🟡 Media |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 

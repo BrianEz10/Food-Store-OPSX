@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import hashlib
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -89,3 +89,17 @@ async def mark_refresh_token_used(db: AsyncSession, token_hash: str) -> None:
     )
     await db.execute(stmt)
     await db.commit()
+
+
+async def revoke_all_user_tokens(db: AsyncSession, usuario_id: int) -> None:
+    """Revoca todos los refresh tokens activos de un usuario."""
+    stmt = (
+        update(RefreshToken)
+        .where(
+            RefreshToken.usuario_id == usuario_id,
+            RefreshToken.revoked_at.is_(None),
+        )
+        .values(revoked_at=func.now())
+    )
+    await db.execute(stmt)
+    await db.flush()
