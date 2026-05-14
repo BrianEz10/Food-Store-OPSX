@@ -21,6 +21,9 @@ import { PagoPage } from '@/pages/pago/PagoPage';
 import { PagoSuccessPage } from '@/pages/pago/PagoSuccessPage';
 import { PagoFailurePage } from '@/pages/pago/PagoFailurePage';
 import { PagoPendingPage } from '@/pages/pago/PagoPendingPage';
+import { MisPedidosPage } from '@/pages/pedidos/MisPedidosPage';
+import { PedidoDetailPage } from '@/pages/pedidos/PedidoDetailPage';
+import { AdminPedidosPage } from '@/pages/admin/pedidos/AdminPedidosPage';
 import { AppLayout } from '@/widgets/layout';
 
 export const AppRouter = () => {
@@ -92,6 +95,24 @@ export const AppRouter = () => {
         <Route path="/pago/failure" element={<PagoFailurePage />} />
         <Route path="/pago/pending" element={<PagoPendingPage />} />
 
+        {/* Order visualization routes */}
+        <Route
+          path="/mis-pedidos"
+          element={
+            <ProtectedRoute>
+              <MisPedidosPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pedidos/:id"
+          element={
+            <ProtectedRoute>
+              <PedidoDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Role-based routes */}
         <Route
           path="/dashboard"
@@ -139,6 +160,16 @@ export const AppRouter = () => {
             <ProtectedRoute>
               <RoleBasedRoute allowedRoles={['STOCK', 'ADMIN']}>
                 <ProductFormPage />
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/pedidos"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRoute allowedRoles={['PEDIDOS', 'ADMIN']}>
+                <AdminPedidosPage />
               </RoleBasedRoute>
             </ProtectedRoute>
           }

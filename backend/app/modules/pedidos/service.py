@@ -7,7 +7,17 @@ from fastapi import HTTPException, status
 
 from app.core.uow import UnitOfWork
 from app.modules.pedidos.model import DetallePedido, HistorialEstadoPedido, Pedido
-from app.modules.pedidos.schemas import PedidoCreate, PedidoResponse, HistorialEstadoPedidoResponse
+from app.modules.pagos.repository import PagoRepository
+from app.modules.pedidos.schemas import (
+    DetallePedidoResponse,
+    HistorialEntry,
+    HistorialEstadoPedidoResponse,
+    PagoEstadoInfo,
+    PedidoCreate,
+    PedidoDetailResponse,
+    PedidoListResponse,
+    PedidoResponse,
+)
 from app.modules.usuarios.model import Usuario
 
 
@@ -192,7 +202,7 @@ class PedidosService:
                 )
 
             # Validar permisos
-            is_staff = any(r.rol_codigo in ["GESTOR", "ADMIN"] for r in current_user.usuarios_roles)
+            is_staff = any(r.rol_codigo in ["PEDIDOS", "ADMIN"] for r in current_user.usuarios_roles)
             if not is_staff and pedido.usuario_id != current_user.id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -206,3 +216,89 @@ class PedidosService:
             historial = result.scalars().all()
 
             return [HistorialEstadoPedidoResponse.model_validate(h) for h in historial]
+
+    @staticmethod
+    async def get_user_pedidos(
+        current_user: Usuario,
+        skip: int = 0,
+        limit: int = 20,
+        estado: str | None = None,
+        filtro_usuario_id: int | None = None,
+    ) -> PedidoListResponse:
+        """
+        Lista pedidos. Clientes ven solo los suyos; gestores/admins pueden filtrar.
+        """
+        is_staff = any(r.rol_codigo in ["PEDIDOS", "ADMIN"] for r in current_user.usuarios_roles)
+
+        async with UnitOfWork() as uow:
+            if is_staff:
+                pedidos, total = await uow.pedidos.get_all(
+                    skip=skip,
+                    limit=limit,
+                    estado=estado,
+                    usuario_id=filtro_usuario_id,
+                )
+            else:
+                pedidos, total = await uow.pedidos.get_by_user_id(
+                    usuario_id=current_user.id,
+                    skip=skip,
+                    limit=limit,
+                    estado=estado,
+                )
+
+        return PedidoListResponse(
+            data=[PedidoResponse.model_validate(p) for p in pedidos],
+            total=total,
+            skip=skip,
+            limit=limit,
+        )
+
+    @staticmethod
+    async def get_pedido_detail(
+        pedido_id: int,
+        current_user: Usuario,
+    ) -> PedidoDetailResponse:
+        """
+        Retorna detalle completo de un pedido: datos, ítems, historial y pago.
+        """
+        async with UnitOfWork() as uow:
+            pedido = await uow.pedidos.get_detail_by_id(pedido_id)
+            if not pedido:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Pedido no encontrado",
+                )
+
+            is_staff = any(r.rol_codigo in ["PEDIDOS", "ADMIN"] for r in current_user.usuarios_roles)
+            if not is_staff and pedido.usuario_id != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="No tienes permiso para ver este pedido",
+                )
+
+            pago_repo = PagoRepository(uow.session)
+            pago = await pago_repo.get_by_pedido_id(pedido_id)
+            pago_info = None
+            if pago:
+                pago_info = PagoEstadoInfo(
+                    pago_id=pago.id,
+                    pago_estado=pago.mp_status,
+                    mp_payment_id=pago.mp_payment_id,
+                )
+
+            historial = [HistorialEntry.model_validate(h) for h in (pedido.historial_estados or [])]
+
+            return PedidoDetailResponse(
+                id=pedido.id,
+                usuario_id=pedido.usuario_id,
+                estado_codigo=pedido.estado_codigo,
+                direccion_id=pedido.direccion_id,
+                total=float(pedido.total),
+                costo_envio=float(pedido.costo_envio),
+                notas=pedido.notas,
+                creado_en=pedido.creado_en,
+                actualizado_en=pedido.actualizado_en,
+                detalles=[DetallePedidoResponse.model_validate(d) for d in (pedido.detalles or [])],
+                historial=historial,
+                pago=pago_info,
+            )

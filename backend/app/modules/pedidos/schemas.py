@@ -62,6 +62,49 @@ class HistorialEstadoPedidoResponse(BaseModel):
         from_attributes = True
 
 
+class PedidoListResponse(BaseModel):
+    data: list[PedidoResponse]
+    total: int
+    skip: int = 0
+    limit: int = 20
+
+
+class HistorialEntry(BaseModel):
+    id: int
+    estado_desde: Optional[str]
+    estado_hasta: str
+    usuario_id: Optional[int]
+    motivo: Optional[str]
+    creado_en: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PagoEstadoInfo(BaseModel):
+    pago_id: int | None = None
+    pago_estado: str | None = None
+    mp_payment_id: int | None = None
+
+
+class PedidoDetailResponse(BaseModel):
+    id: int
+    usuario_id: int
+    estado_codigo: str
+    direccion_id: Optional[int] = None
+    total: float
+    costo_envio: float
+    notas: Optional[str] = None
+    creado_en: datetime
+    actualizado_en: datetime
+    detalles: list[DetallePedidoResponse] = []
+    historial: list[HistorialEntry] = []
+    pago: Optional[PagoEstadoInfo] = None
+
+    class Config:
+        from_attributes = True
+
+
 class PedidoStatusUpdate(BaseModel):
     nuevo_estado: str
     motivo: Optional[str] = None

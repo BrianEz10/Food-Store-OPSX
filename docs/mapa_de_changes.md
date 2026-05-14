@@ -115,11 +115,11 @@ Leyenda:
 | 09b | `checkout-frontend` | US-038, 071 | 09a | ✅ Archivado |
 | 10 | `pagos-mercadopago` | US-045, 046, 047, 048, 072 | 09a | ✅ Archivado |
 | 11a | `fsm-backend` | US-039, 040, 041, 042, 043, 044 | 09a, 10 | ✅ Archivado |
-| 11b | `visualizacion-pedidos` | US-049, 050, 051, 052 | 11a | 🟡 Media |
+| 11b | `visualizacion-pedidos` | US-049, 050, 051, 052 | 11a | ✅ Archivado |
 | 12 | `admin-usuarios-y-catalogo` | US-053, 054, 055, 064, 065 | 11a | 🟡 Media |
 | 13 | `dashboard-metricas` | US-056, 057, 058, 059, 060 | 11a | 🟡 Media |
 
-**Distribución**: 0 🔴 · 3 🟡 · 0 🟢 · 19 ✅ archivados
+**Distribución**: 0 🔴 · 2 🟡 · 0 🟢 · 20 ✅ archivados
 
 ---
 
@@ -395,14 +395,14 @@ Leyenda:
 
 ---
 
-## Change 11b: `visualizacion-pedidos`
+## Change 11b: `visualizacion-pedidos` ✅ Archivado (2026-05-14)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | Paneles de visualización de pedidos para todos los roles: cliente ve sus pedidos, gestor ve todos y puede avanzar estados, timeline visual del historial |
 | **HU** | US-049, US-050, US-051, US-052 |
 | **Depende de** | **Change 11a** (FSM y endpoints de listado operativos) |
-| **Complejidad** | 🟡 Media |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 - Panel del cliente: "Mis pedidos" con filtros y detalle

@@ -32,3 +32,37 @@ export interface PedidoResponse {
   actualizado_en: string;
   detalles: DetallePedidoResponse[];
 }
+
+// ── List / Detail types ──
+
+export interface PedidoListResponse {
+  data: PedidoResponse[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+export interface HistorialEntry {
+  id: number;
+  estado_desde: string | null;
+  estado_hasta: string;
+  usuario_id: number | null;
+  motivo: string | null;
+  creado_en: string;
+}
+
+export interface PagoEstadoInfo {
+  pago_id: number | null;
+  pago_estado: string | null;
+  mp_payment_id: number | null;
+}
+
+export interface PedidoDetailResponse extends PedidoResponse {
+  historial: HistorialEntry[];
+  pago: PagoEstadoInfo | null;
+}
+
+export interface PedidoStatusUpdate {
+  nuevo_estado: string;
+  motivo?: string;
+}

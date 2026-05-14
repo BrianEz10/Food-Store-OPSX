@@ -104,6 +104,12 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['CLIENT'],
   },
   {
+    label: 'Gestión de Pedidos',
+    path: '/admin/pedidos',
+    icon: ClipboardList as LucideIcon,
+    roles: ['PEDIDOS', 'ADMIN'],
+  },
+  {
     label: 'Usuarios',
     path: '/admin/usuarios',
     icon: Users as LucideIcon,

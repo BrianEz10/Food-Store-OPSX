@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 
 export const CheckoutSuccessPage = () => {
   const navigate = useNavigate();
@@ -50,6 +50,12 @@ export const CheckoutSuccessPage = () => {
         >
           Proceder al Pago
         </button>
+        <Link
+          to={`/pedidos/${id}`}
+          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm"
+        >
+          Ver Detalle del Pedido
+        </Link>
       </div>
     </div>
   );
