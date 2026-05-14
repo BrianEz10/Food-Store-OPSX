@@ -16,6 +16,7 @@ from app.modules.ingredientes.repository import IngredienteRepository
 from app.modules.productos.repository import ProductoRepository
 from app.modules.refreshtokens.repository import RefreshTokenRepository
 from app.modules.usuarios.repository import UsuarioRepository
+from app.modules.admin.repository import ConfiguracionRepository
 
 
 class UnitOfWork:
@@ -41,6 +42,7 @@ class UnitOfWork:
     ingredientes: IngredienteRepository
     pedidos: PedidoRepository
     pagos: PagoRepository
+    configuraciones: ConfiguracionRepository
 
     async def __aenter__(self) -> "UnitOfWork":
         self.session = async_session_factory()
@@ -54,6 +56,7 @@ class UnitOfWork:
         self.ingredientes = IngredienteRepository(self.session)
         self.pedidos = PedidoRepository(self.session)
         self.pagos = PagoRepository(self.session)
+        self.configuraciones = ConfiguracionRepository(self.session)
 
         return self
 

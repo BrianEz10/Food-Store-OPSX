@@ -12,6 +12,12 @@ from app.modules.admin.schemas import (
     AdminUsuarioResponse,
     AdminUsuarioUpdate,
     AdminUsuarioEstadoUpdate,
+    DashboardResumenResponse,
+    VentasPorMesEntry,
+    TopProductoEntry,
+    PedidosPorEstadoEntry,
+    ConfiguracionResponse,
+    ConfiguracionUpdate,
 )
 from app.modules.usuarios.model import Usuario, UsuarioRol
 from app.modules.auth.repository import revoke_all_user_tokens
@@ -173,3 +179,54 @@ def _to_detail_response(u: Usuario) -> AdminUsuarioDetailResponse:
         actualizado_en=u.actualizado_en,
         eliminado_en=u.eliminado_en,
     )
+
+
+# ── Dashboard service ──
+
+
+class DashboardService:
+    @staticmethod
+    async def get_resumen() -> DashboardResumenResponse:
+        from app.core.uow import UnitOfWork
+        async with UnitOfWork() as uow:
+            kpis = await uow.pedidos.get_resumen_kpis()
+        return DashboardResumenResponse(**kpis)
+
+    @staticmethod
+    async def get_ventas_por_mes() -> list[VentasPorMesEntry]:
+        from app.core.uow import UnitOfWork
+        async with UnitOfWork() as uow:
+            data = await uow.pedidos.get_ventas_por_mes()
+        return [VentasPorMesEntry(**d) for d in data]
+
+    @staticmethod
+    async def get_top_productos(limit: int = 10) -> list[TopProductoEntry]:
+        from app.core.uow import UnitOfWork
+        async with UnitOfWork() as uow:
+            data = await uow.pedidos.get_top_productos(limit)
+        return [TopProductoEntry(**d) for d in data]
+
+    @staticmethod
+    async def get_pedidos_por_estado() -> list[PedidosPorEstadoEntry]:
+        from app.core.uow import UnitOfWork
+        async with UnitOfWork() as uow:
+            data = await uow.pedidos.get_pedidos_por_estado()
+        return [PedidosPorEstadoEntry(**d) for d in data]
+
+    @staticmethod
+    async def listar_configuracion() -> list[ConfiguracionResponse]:
+        from app.core.uow import UnitOfWork
+        async with UnitOfWork() as uow:
+            return await uow.configuraciones.get_all_as_dict()
+        # Note: returns list of dicts, we convert in the router
+
+    @staticmethod
+    async def actualizar_configuracion(data: ConfiguracionUpdate) -> ConfiguracionResponse:
+        from app.core.uow import UnitOfWork
+        async with UnitOfWork() as uow:
+            config = await uow.configuraciones.upsert(
+                clave=data.clave,
+                valor=data.valor,
+                descripcion=data.descripcion,
+            )
+        return ConfiguracionResponse.model_validate(config)

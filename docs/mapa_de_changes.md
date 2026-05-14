@@ -117,9 +117,9 @@ Leyenda:
 | 11a | `fsm-backend` | US-039, 040, 041, 042, 043, 044 | 09a, 10 | ✅ Archivado |
 | 11b | `visualizacion-pedidos` | US-049, 050, 051, 052 | 11a | ✅ Archivado |
 | 12 | `admin-usuarios-y-catalogo` | US-053, 054, 055, 064, 065 | 11a | ✅ Archivado |
-| 13 | `dashboard-metricas` | US-056, 057, 058, 059, 060 | 11a | 🟡 Media |
+| 13 | `dashboard-metricas` | US-056, 057, 058, 059, 060 | 11a | ✅ Archivado |
 
-**Distribución**: 0 🔴 · 1 🟡 · 0 🟢 · 21 ✅ archivados
+**Distribución**: 0 🔴 · 0 🟡 · 0 🟢 · 22 ✅ archivados
 
 ---
 
@@ -434,14 +434,14 @@ Leyenda:
 
 ---
 
-## Change 13: `dashboard-metricas`
+## Change 13: `dashboard-metricas` ✅ Archivado (2026-05-14)
 
 | Campo | Valor |
 |---|---|
 | **Funcionalidad** | Dashboard de administración con KPIs, gráficos de ventas, ranking de productos, distribución de pedidos por estado, y configuración del sistema |
 | **HU** | US-056, US-057, US-058, US-059, US-060 |
 | **Depende de** | **Change 11a** |
-| **Complejidad** | 🟡 Media |
+| **Complejidad** | ✅ Archivado |
 
 **Entregables:**
 
