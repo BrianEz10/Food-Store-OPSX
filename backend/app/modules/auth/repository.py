@@ -35,6 +35,7 @@ async def create_user(
     password_hash: str,
     nombre: str,
     apellido: str,
+    telefono: str | None = None,
 ) -> Usuario:
     """Crea un nuevo usuario."""
     user = Usuario(
@@ -42,6 +43,7 @@ async def create_user(
         password_hash=password_hash,
         nombre=nombre,
         apellido=apellido,
+        telefono=telefono,
     )
     db.add(user)
     

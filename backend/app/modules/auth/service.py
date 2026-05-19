@@ -45,6 +45,7 @@ async def register(db: AsyncSession, data: UserRegisterRequest) -> UserResponse:
         password_hash=pwd_hash,
         nombre=data.nombre,
         apellido=data.apellido,
+        telefono=data.telefono,
     )
 
     return UserResponse(
@@ -52,6 +53,7 @@ async def register(db: AsyncSession, data: UserRegisterRequest) -> UserResponse:
         email=user.email,
         nombre=user.nombre,
         apellido=user.apellido,
+        telefono=user.telefono,
         roles=["CLIENT"],  # Lo acabamos de asignar por defecto
     )
 

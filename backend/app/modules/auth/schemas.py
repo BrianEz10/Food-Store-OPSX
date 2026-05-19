@@ -10,6 +10,7 @@ class UserRegisterRequest(BaseModel):
     password: str
     nombre: str
     apellido: str
+    telefono: str | None = None
 
     @field_validator("password")
     @classmethod
@@ -44,6 +45,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     nombre: str
     apellido: str
+    telefono: str | None = None
     roles: list[str] = Field(default_factory=list)
 
 

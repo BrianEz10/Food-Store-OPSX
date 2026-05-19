@@ -1,8 +1,5 @@
-# frontend-auth-flow Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change auth-frontend. Update Purpose after archive.
-## Requirements
 ### Requirement: Flujo de inicio de sesión en frontend
 El sistema SHALL proveer un formulario de inicio de sesión manejado por TanStack Form que se comunique con el endpoint de autenticación. Este formulario MUST presentarse en una interfaz standalone (sin header ni sidebar del layout base general) a pantalla completa (full-screen) con layout perfectamente centrado. 
 
@@ -57,15 +54,3 @@ La presentación visual MUST cumplir estrictamente con los tokens del sistema de
 #### Scenario: Registro Standalone Centrado
 - **WHEN** el usuario navega a la página de registro
 - **THEN** se renderiza la vista centrada full-screen sin la barra de navegación superior ni el menú lateral.
-
-### Requirement: Redirección basada en roles
-El sistema SHALL redirigir a los usuarios tras un login exitoso al área apropiada según su rol.
-
-#### Scenario: Redirección de Cliente
-- **WHEN** el usuario tiene solo el rol CLIENT y hace login
-- **THEN** es redirigido a `/` (catálogo principal).
-
-#### Scenario: Redirección de Administrador o Gestor
-- **WHEN** el usuario tiene roles ADMIN, STOCK o PEDIDOS y hace login
-- **THEN** es redirigido a `/dashboard`.
-
