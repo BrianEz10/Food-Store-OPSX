@@ -1,8 +1,6 @@
 ## Purpose
 Definir el layout principal de la aplicación con navegación responsive, menú adaptado por rol y estructura de routing.
-
 ## Requirements
-
 ### Requirement: AppLayout responsive con sidebar y bottom nav
 
 El sistema SHALL proveer un componente `AppLayout` que encapsule la estructura visual principal de la aplicación, con navegación persistente adaptada al tamaño de pantalla.
@@ -97,7 +95,7 @@ El sistema SHALL reemplazar los placeholders inline del router con componentes d
 #### Scenario: HomePage muestra mensaje de bienvenida
 
 - **WHEN** un usuario accede a `/`
-- **THEN** se renderiza `HomePage` con un mensaje de bienvenida y resumen básico del sistema
+- **THEN** se renderiza `HomePage` con una landing page completa y dinámica estructurada con Hero, Categorías, Platos del Día, Promociones y un Footer, integrada dentro de la estructura de AppLayout
 
 #### Scenario: DashboardPage placeholder
 
