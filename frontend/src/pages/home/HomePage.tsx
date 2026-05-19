@@ -14,6 +14,7 @@ import {
   Leaf,
   Cookie,
   ArrowRight,
+  ChevronRight,
   Clock,
   MapPin,
   Phone,
