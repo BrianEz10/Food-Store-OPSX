@@ -15,26 +15,26 @@ const TreeNode: React.FC<{
   return (
     <div>
       <div
-        className="flex items-center gap-2 py-2 px-2 hover:bg-gray-50 rounded group"
+        className="flex items-center gap-2 py-2 px-2 hover:bg-surface-container/50 rounded-input group transition-colors"
         style={{ paddingLeft: `${depth * 20 + 8}px` }}
       >
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-4 text-gray-400 hover:text-gray-600"
+          className="w-4 text-gray-400 hover:text-on-surface transition-colors"
         >
           {hasChildren ? (expanded ? '▼' : '▶') : '·'}
         </button>
-        <span className="flex-1 text-sm text-gray-900">{node.nombre}</span>
+        <span className="flex-1 text-sm text-on-surface font-medium">{node.nombre}</span>
         <div className="hidden group-hover:flex gap-1">
           <button
             onClick={() => onEdit(node.id)}
-            className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded"
+            className="px-2 py-1 text-xs text-primary hover:bg-primary-light rounded-input font-medium transition-colors"
           >
             Editar
           </button>
           <button
             onClick={() => onDelete(node.id)}
-            className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded"
+            className="px-2 py-1 text-xs text-error hover:bg-error-light rounded-input font-medium transition-colors"
           >
             Eliminar
           </button>
@@ -99,25 +99,25 @@ export const CategoryListPage: React.FC = () => {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categorías</h1>
+          <h1 className="text-2xl font-bold font-display text-on-surface">Categorías</h1>
           <p className="text-sm text-gray-500 mt-1">
             Gestiona las categorías jerárquicas de productos
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex bg-surface-container rounded-card p-1 border border-outline/10">
             <button
               onClick={() => setViewMode('tree')}
-              className={`px-3 py-1 text-sm rounded-md ${
-                viewMode === 'tree' ? 'bg-white shadow-sm' : 'text-gray-600'
+              className={`px-3 py-1 text-sm rounded-input transition-all ${
+                viewMode === 'tree' ? 'bg-white shadow-sm font-semibold text-on-surface' : 'text-gray-500 hover:text-on-surface'
               }`}
             >
               Árbol
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-1 text-sm rounded-md ${
-                viewMode === 'list' ? 'bg-white shadow-sm' : 'text-gray-600'
+              className={`px-3 py-1 text-sm rounded-input transition-all ${
+                viewMode === 'list' ? 'bg-white shadow-sm font-semibold text-on-surface' : 'text-gray-500 hover:text-on-surface'
               }`}
             >
               Lista
@@ -125,7 +125,7 @@ export const CategoryListPage: React.FC = () => {
           </div>
           <button
             onClick={() => setModalOpen(true)}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            className="px-4 py-2 text-sm font-bold text-white bg-primary rounded-input hover:bg-primary-hover shadow-sm transition-colors"
           >
             + Nueva Categoría
           </button>
@@ -133,16 +133,16 @@ export const CategoryListPage: React.FC = () => {
       </div>
 
       {error && (
-        <div className="mb-4 p-4 text-sm text-red-700 bg-red-100 rounded-md flex justify-between items-center">
+        <div className="mb-4 p-4 text-sm text-error bg-error-light rounded-input flex justify-between items-center border border-error/20">
           <span>{error}</span>
-          <button onClick={clearError} className="text-red-500 hover:text-red-700">✕</button>
+          <button onClick={clearError} className="text-error hover:opacity-80">✕</button>
         </div>
       )}
 
       {isLoading ? (
         <div className="text-center py-12 text-gray-500">Cargando...</div>
       ) : viewMode === 'tree' ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="bg-white border border-outline/10 rounded-card p-6 shadow-sm">
           {tree.length === 0 ? (
             <p className="text-center py-8 text-gray-400">No hay categorías todavía</p>
           ) : (
@@ -158,36 +158,36 @@ export const CategoryListPage: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="bg-white border border-outline/10 rounded-card overflow-hidden shadow-sm">
+          <table className="min-w-full divide-y divide-outline/10">
+            <thead className="bg-surface-container">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Padre</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Orden</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">ID</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Padre</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Orden</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-outline/10">
               {categorias.map((cat) => {
                 const padre = categorias.find((c) => c.id === cat.padre_id);
                 return (
-                  <tr key={cat.id} className="hover:bg-gray-50">
+                  <tr key={cat.id} className="hover:bg-surface-container/50 transition-colors">
                     <td className="px-4 py-3 text-sm text-gray-500">{cat.id}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{cat.nombre}</td>
+                    <td className="px-4 py-3 text-sm font-bold text-on-surface font-display">{cat.nombre}</td>
                     <td className="px-4 py-3 text-sm text-gray-500">{padre?.nombre || '—'}</td>
                     <td className="px-4 py-3 text-sm text-gray-500">{cat.orden}</td>
                     <td className="px-4 py-3 text-sm text-right">
                       <button
                         onClick={() => handleEdit(cat.id)}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
+                        className="text-primary hover:text-primary-hover font-semibold transition-colors mr-3"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDelete(cat.id)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-error hover:text-error/95 font-semibold transition-colors"
                       >
                         Eliminar
                       </button>

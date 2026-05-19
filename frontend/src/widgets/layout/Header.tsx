@@ -49,8 +49,8 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
     <header
       className={cn(
         'fixed top-0 left-0 right-0 h-16 z-40',
-        'bg-white/90 dark:bg-surface-900/90 backdrop-blur-md',
-        'border-b border-slate-200 dark:border-slate-700',
+        'bg-surface/90 dark:bg-surface-900/90 backdrop-blur-md',
+        'border-b border-outline/20 dark:border-slate-700',
       )}
     >
       <div className="flex items-center justify-between h-full px-4 lg:px-6">
@@ -65,7 +65,7 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
           </button>
 
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-xl font-display font-bold text-primary-500">
+            <span className="text-xl font-display font-bold text-primary">
               Food Store
             </span>
           </Link>
@@ -123,7 +123,7 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
               </Link>
               <Link
                 to="/register"
-                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
               >
                 Registrarse
               </Link>

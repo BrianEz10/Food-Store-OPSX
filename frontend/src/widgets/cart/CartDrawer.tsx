@@ -22,9 +22,9 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-md bg-white dark:bg-surface-900 shadow-2xl flex flex-col animate-slide-in-right">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+      <div className="relative w-full max-w-md bg-surface-container dark:bg-surface-900 shadow-2xl flex flex-col animate-slide-in-right">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-outline/20 dark:border-slate-700">
+          <h2 className="text-lg font-bold font-display text-on-surface dark:text-slate-100">
             Carrito
           </h2>
           <button
@@ -44,17 +44,17 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
             <Link
               to="/catalogo"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors"
+              className="px-4 py-2 rounded-input text-sm font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
             >
               Explorar productos
             </Link>
           </div>
         ) : (
           <>
-            <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="flex-1 overflow-y-auto divide-y divide-outline/10 dark:divide-slate-800">
               {items.map((item) => (
                 <div key={`${item.productoId}-${JSON.stringify(item.exclusiones)}`} className="flex gap-3 p-4">
-                  <div className="size-16 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div className="size-16 shrink-0 rounded-card bg-slate-100 dark:bg-slate-800 overflow-hidden">
                     {item.imagenUrl ? (
                       <img
                         src={item.imagenUrl}
@@ -68,7 +68,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
+                    <p className="text-sm font-medium text-on-surface dark:text-slate-100 truncate">
                       {item.nombre}
                     </p>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -107,10 +107,10 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
               ))}
             </div>
 
-            <div className="border-t border-slate-200 dark:border-slate-700 p-4 space-y-3">
+            <div className="border-t border-outline/20 dark:border-slate-700 p-4 space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-600 dark:text-slate-400">Total</span>
-                <span className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                <span className="text-lg font-bold text-on-surface dark:text-slate-100">
                   ${total.toFixed(2)}
                 </span>
               </div>
@@ -118,8 +118,8 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 to="/carrito"
                 onClick={onClose}
                 className={cn(
-                  'block w-full text-center py-2.5 rounded-lg text-sm font-medium',
-                  'bg-primary-500 text-white hover:bg-primary-600 transition-colors',
+                  'block w-full text-center py-2.5 rounded-input text-sm font-medium',
+                  'bg-primary text-white hover:bg-primary-hover transition-colors',
                 )}
               >
                 Ver carrito completo

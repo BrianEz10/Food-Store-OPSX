@@ -29,20 +29,20 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ historial }) => {
           <div key={entry.id} className="relative flex gap-4 pb-6 last:pb-0">
             {/* Vertical line */}
             {!isLast && (
-              <div className="absolute left-[11px] top-5 bottom-0 w-0.5 bg-gray-200" />
+              <div className="absolute left-[11px] top-5 bottom-0 w-0.5 bg-outline/20" />
             )}
             {/* Circle dot */}
             <div className={`relative z-10 mt-1 h-[22px] w-[22px] flex-shrink-0 rounded-full border-2 ${
               entry.estado_hasta === 'CANCELADO'
-                ? 'border-red-400 bg-red-50'
+                ? 'border-error bg-error-light'
                 : entry.estado_hasta === 'ENTREGADO'
-                ? 'border-green-400 bg-green-50'
-                : 'border-blue-400 bg-blue-50'
+                ? 'border-tertiary bg-tertiary-light'
+                : 'border-primary bg-primary-light'
             }`} />
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-semibold text-on-surface">
                   {fromLabel} → {toLabel}
                 </span>
               </div>

@@ -5,7 +5,7 @@ Expone los endpoints de creación de preferencia, webhook IPN y consulta de esta
 
 from fastapi import APIRouter, Depends, Request
 
-from app.core.security import get_current_user
+from app.core.dependencies import get_current_user
 from app.modules.pagos.schemas import PagoEstadoResponse, PagoResponse
 from app.modules.pagos.service import PagosService
 from app.modules.usuarios.model import Usuario

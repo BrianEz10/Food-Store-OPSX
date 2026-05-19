@@ -6,7 +6,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, status
 
-from app.core.security import get_current_active_user, require_role
+from app.core.dependencies import get_current_active_user, require_role
 from app.modules.pedidos.schemas import (
     HistorialEstadoPedidoResponse,
     PedidoCreate,

@@ -11,9 +11,9 @@ type ToastMsg = { text: string; type: 'success' | 'error' };
 
 const Toast: React.FC<{ msg: ToastMsg | null; onClose: () => void }> = ({ msg, onClose }) => {
   if (!msg) return null;
-  const bg = msg.type === 'success' ? 'bg-green-50 border-green-400 text-green-800' : 'bg-red-50 border-red-400 text-red-800';
+  const bg = msg.type === 'success' ? 'bg-tertiary-light border-tertiary/20 text-tertiary' : 'bg-error-light border-error/20 text-error';
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 border rounded-lg text-sm font-medium ${bg}`}>
+    <div className={`flex items-center gap-3 px-4 py-3 border rounded-card text-sm font-medium ${bg}`}>
       <span className="flex-1">{msg.text}</span>
       <button onClick={onClose} className="text-current opacity-60 hover:opacity-100">✕</button>
     </div>
@@ -106,7 +106,7 @@ export const ProfilePage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
       </div>
     );
   }
@@ -114,13 +114,13 @@ export const ProfilePage: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto py-10 px-4 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Mi Perfil</h1>
+        <h1 className="text-3xl font-bold font-display text-on-surface">Mi Perfil</h1>
         <p className="mt-1 text-sm text-gray-500">Administrá tu información personal y contraseña.</p>
       </div>
 
       {/* ── Sección: Datos personales ─────────────────────────────── */}
-      <section className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-800">Datos personales</h2>
+      <section className="bg-white border border-outline/10 rounded-card p-6 space-y-4 shadow-sm">
+        <h2 className="text-lg font-bold font-display text-on-surface">Datos personales</h2>
 
         <Toast msg={perfilToast} onClose={() => setPerfilToast(null)} />
 
@@ -135,7 +135,7 @@ export const ProfilePage: React.FC = () => {
               type="email"
               value={perfil?.email ?? ''}
               readOnly
-              className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm text-gray-500 cursor-not-allowed"
+              className="mt-1 block w-full px-3 py-2 bg-surface-container border border-outline/10 rounded-input text-sm text-gray-500 cursor-not-allowed"
             />
             <p className="mt-1 text-xs text-gray-400">El email no se puede modificar desde aquí.</p>
           </div>
@@ -153,12 +153,12 @@ export const ProfilePage: React.FC = () => {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                    field.state.meta.errors.length ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-3 py-2 border rounded-input shadow-sm text-sm focus:outline-none focus:ring-primary focus:border-primary ${
+                    field.state.meta.errors.length ? 'border-red-300' : 'border-outline/20'
                   }`}
                 />
                 {field.state.meta.errors.length > 0 && (
-                  <p className="mt-1 text-sm text-red-600">{field.state.meta.errors.join(', ')}</p>
+                  <p className="mt-1 text-sm text-error">{field.state.meta.errors.join(', ')}</p>
                 )}
               </div>
             )}
@@ -177,12 +177,12 @@ export const ProfilePage: React.FC = () => {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                    field.state.meta.errors.length ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-3 py-2 border rounded-input shadow-sm text-sm focus:outline-none focus:ring-primary focus:border-primary ${
+                    field.state.meta.errors.length ? 'border-red-300' : 'border-outline/20'
                   }`}
                 />
                 {field.state.meta.errors.length > 0 && (
-                  <p className="mt-1 text-sm text-red-600">{field.state.meta.errors.join(', ')}</p>
+                  <p className="mt-1 text-sm text-error">{field.state.meta.meta?.errors?.join(', ') || field.state.meta.errors.join(', ')}</p>
                 )}
               </div>
             )}
@@ -193,7 +193,7 @@ export const ProfilePage: React.FC = () => {
               <button
                 type="submit"
                 disabled={!canSubmit || updateMutation.isPending}
-                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 transition-colors"
+                className="w-full py-2 px-4 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-input disabled:opacity-50 transition-colors"
               >
                 {isSubmitting || updateMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
               </button>
@@ -203,8 +203,8 @@ export const ProfilePage: React.FC = () => {
       </section>
 
       {/* ── Sección: Cambiar contraseña ───────────────────────────── */}
-      <section className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-800">Cambiar contraseña</h2>
+      <section className="bg-white border border-outline/10 rounded-card p-6 space-y-4 shadow-sm">
+        <h2 className="text-lg font-bold font-display text-on-surface">Cambiar contraseña</h2>
 
         <Toast msg={passToast} onClose={() => setPassToast(null)} />
 
@@ -224,12 +224,12 @@ export const ProfilePage: React.FC = () => {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                    field.state.meta.errors.length ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-3 py-2 border rounded-input shadow-sm text-sm focus:outline-none focus:ring-primary focus:border-primary ${
+                    field.state.meta.errors.length ? 'border-red-300' : 'border-outline/20'
                   }`}
                 />
                 {field.state.meta.errors.length > 0 && (
-                  <p className="mt-1 text-sm text-red-600">{field.state.meta.errors.join(', ')}</p>
+                  <p className="mt-1 text-sm text-error">{field.state.meta.errors.join(', ')}</p>
                 )}
               </div>
             )}
@@ -250,12 +250,12 @@ export const ProfilePage: React.FC = () => {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                    field.state.meta.errors.length ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-3 py-2 border rounded-input shadow-sm text-sm focus:outline-none focus:ring-primary focus:border-primary ${
+                    field.state.meta.errors.length ? 'border-red-300' : 'border-outline/20'
                   }`}
                 />
                 {field.state.meta.errors.length > 0 && (
-                  <p className="mt-1 text-sm text-red-600">{field.state.meta.errors.join(', ')}</p>
+                  <p className="mt-1 text-sm text-error">{field.state.meta.errors.join(', ')}</p>
                 )}
               </div>
             )}
@@ -279,12 +279,12 @@ export const ProfilePage: React.FC = () => {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                    field.state.meta.errors.length ? 'border-red-300' : 'border-gray-300'
+                  className={`mt-1 block w-full px-3 py-2 border rounded-input shadow-sm text-sm focus:outline-none focus:ring-primary focus:border-primary ${
+                    field.state.meta.errors.length ? 'border-red-300' : 'border-outline/20'
                   }`}
                 />
                 {field.state.meta.errors.length > 0 && (
-                  <p className="mt-1 text-sm text-red-600">{field.state.meta.errors.join(', ')}</p>
+                  <p className="mt-1 text-sm text-error">{field.state.meta.errors.join(', ')}</p>
                 )}
               </div>
             )}
@@ -295,7 +295,7 @@ export const ProfilePage: React.FC = () => {
               <button
                 type="submit"
                 disabled={!canSubmit || passMutation.isPending}
-                className="w-full py-2 px-4 bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium rounded-md disabled:opacity-50 transition-colors"
+                className="w-full py-2 px-4 bg-secondary hover:bg-secondary-hover text-white text-sm font-semibold rounded-input disabled:opacity-50 transition-colors"
               >
                 {isSubmitting || passMutation.isPending ? 'Cambiando...' : 'Cambiar contraseña'}
               </button>

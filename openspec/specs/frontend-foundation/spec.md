@@ -1,5 +1,6 @@
-## ADDED Requirements
-
+## Purpose
+Definir las bases estructurales del frontend del Food Store, incluyendo herramientas de bundling, layouts base, sistema de estilos y tipografía.
+## Requirements
 ### Requirement: Scaffolding Vite + React + TypeScript
 El sistema SHALL proveer un proyecto Vite funcional con React 18+ y TypeScript en modo strict como base del frontend de Food Store.
 
@@ -31,15 +32,15 @@ El sistema SHALL organizar el código fuente del frontend según Feature-Sliced 
 - **THEN** existen los subdirectorios: `api/`, `stores/`, `types/`, `lib/` con sus archivos de barril
 
 ### Requirement: Tailwind CSS configurado con tema base
-El sistema SHALL incluir Tailwind CSS v3 con PostCSS, un tema personalizado, y tipografía moderna cargada desde Google Fonts.
+El sistema SHALL incluir Tailwind CSS v3 con PostCSS, un tema personalizado basado en "Vivid Modernity", y tipografía moderna cargada desde Google Fonts.
 
 #### Scenario: Utilidades Tailwind disponibles
-- **WHEN** un componente usa clases como `bg-primary-500` o `text-lg`
-- **THEN** los estilos se aplican correctamente en el navegador
+- **WHEN** un componente usa clases como `bg-primary` o `text-lg`
+- **THEN** los estilos se aplican correctamente en el navegador respetando la paleta Vivid Modernity
 
 #### Scenario: Tema personalizado
 - **WHEN** se inspecciona `tailwind.config.js`
-- **THEN** el tema extiende colores (`primary`, `secondary`, `surface`, `danger`, `success`, `warning`), familias de fuente (`sans: Inter`, `display: Outfit`), y conserva los defaults de Tailwind
+- **THEN** el tema sobrescribe (overwrite) colores para forzar el uso estricto de la paleta Vivid Modernity (primary: #b3193d, secondary: #6d4e9f, tertiary: #006a42, surface: #fff8f7, error: #ba1a1a) y tipografías (Outfit e Inter)
 
 #### Scenario: Google Fonts cargadas
 - **WHEN** la app se renderiza en el navegador
@@ -89,3 +90,4 @@ El sistema SHALL reestructurar `app/router.tsx` para usar layout routes de React
 
 - **WHEN** se inspeccionan las rutas autenticadas
 - **THEN** las rutas que requieren autenticación están envueltas en `<ProtectedRoute>` y las que requieren roles específicos usan `<RoleBasedRoute>`
+

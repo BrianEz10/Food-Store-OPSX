@@ -148,10 +148,10 @@ export const ProductFormPage: React.FC = () => {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-48" />
-          <div className="h-10 bg-gray-200 rounded w-full" />
-          <div className="h-10 bg-gray-200 rounded w-full" />
-          <div className="h-10 bg-gray-200 rounded w-full" />
+          <div className="h-8 bg-surface-container-high rounded w-48" />
+          <div className="h-10 bg-surface-container-high rounded w-full" />
+          <div className="h-10 bg-surface-container-high rounded w-full" />
+          <div className="h-10 bg-surface-container-high rounded w-full" />
         </div>
       </div>
     );
@@ -160,7 +160,7 @@ export const ProductFormPage: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold font-display text-on-surface">
           {isEdit ? 'Editar Producto' : 'Nuevo Producto'}
         </h1>
         <p className="text-sm text-gray-500 mt-1">
@@ -169,8 +169,8 @@ export const ProductFormPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
-        <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-gray-800">Información básica</h2>
+        <div className="bg-white border border-outline/10 rounded-card p-6 space-y-4 shadow-sm">
+          <h2 className="text-lg font-bold font-display text-on-surface">Información básica</h2>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
@@ -178,9 +178,9 @@ export const ProductFormPage: React.FC = () => {
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full px-3 py-2 text-sm border rounded-input focus:outline-none focus:ring-2 focus:ring-primary text-on-surface bg-white ${errors.nombre ? 'border-error' : 'border-outline/20'}`}
             />
-            {errors.nombre && <p className="mt-1 text-xs text-red-600">{errors.nombre}</p>}
+            {errors.nombre && <p className="mt-1 text-xs text-error">{errors.nombre}</p>}
           </div>
 
           <div>
@@ -189,7 +189,7 @@ export const ProductFormPage: React.FC = () => {
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm border border-outline/20 rounded-input focus:outline-none focus:ring-2 focus:ring-primary text-on-surface bg-white"
             />
           </div>
 
@@ -199,7 +199,7 @@ export const ProductFormPage: React.FC = () => {
               type="text"
               value={imagenUrl}
               onChange={(e) => setImagenUrl(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm border border-outline/20 rounded-input focus:outline-none focus:ring-2 focus:ring-primary text-on-surface bg-white"
             />
           </div>
 
@@ -212,9 +212,9 @@ export const ProductFormPage: React.FC = () => {
                 min={0}
                 value={precioBase}
                 onChange={(e) => setPrecioBase(e.target.value)}
-                className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.precioBase ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full px-3 py-2 text-sm border rounded-input focus:outline-none focus:ring-2 focus:ring-primary text-on-surface bg-white ${errors.precioBase ? 'border-error' : 'border-outline/20'}`}
               />
-              {errors.precioBase && <p className="mt-1 text-xs text-red-600">{errors.precioBase}</p>}
+              {errors.precioBase && <p className="mt-1 text-xs text-error">{errors.precioBase}</p>}
             </div>
 
             <div>
@@ -224,9 +224,9 @@ export const ProductFormPage: React.FC = () => {
                 min={0}
                 value={stockCantidad}
                 onChange={(e) => setStockCantidad(e.target.value)}
-                className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.stockCantidad ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full px-3 py-2 text-sm border rounded-input focus:outline-none focus:ring-2 focus:ring-primary text-on-surface bg-white ${errors.stockCantidad ? 'border-error' : 'border-outline/20'}`}
               />
-              {errors.stockCantidad && <p className="mt-1 text-xs text-red-600">{errors.stockCantidad}</p>}
+              {errors.stockCantidad && <p className="mt-1 text-xs text-error">{errors.stockCantidad}</p>}
             </div>
           </div>
 
@@ -236,14 +236,14 @@ export const ProductFormPage: React.FC = () => {
               id="disponible"
               checked={disponible}
               onChange={(e) => setDisponible(e.target.checked)}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+              className="w-4 h-4 text-primary border-outline/20 rounded focus:ring-primary"
             />
             <label htmlFor="disponible" className="text-sm text-gray-700">Producto disponible para la venta</label>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">Categorías</h2>
+        <div className="bg-white border border-outline/10 rounded-card p-6 shadow-sm">
+          <h2 className="text-lg font-bold font-display text-on-surface mb-3">Categorías</h2>
           {categorias.length === 0 ? (
             <p className="text-sm text-gray-400">No hay categorías disponibles</p>
           ) : (
@@ -253,10 +253,10 @@ export const ProductFormPage: React.FC = () => {
                   key={cat.id}
                   type="button"
                   onClick={() => toggleCategoria(cat.id)}
-                  className={`px-3 py-1 text-sm rounded-md border transition-colors ${
+                  className={`px-3 py-1 text-sm rounded-input border transition-colors ${
                     selectedCategoriaIds.includes(cat.id)
-                      ? 'bg-blue-100 border-blue-300 text-blue-700'
-                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                      ? 'bg-primary-light border-primary/30 text-primary font-semibold'
+                      : 'bg-white border-outline/20 text-on-surface hover:bg-surface-container-high'
                   }`}
                 >
                   {cat.nombre}
@@ -266,38 +266,38 @@ export const ProductFormPage: React.FC = () => {
           )}
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">Ingredientes</h2>
+        <div className="bg-white border border-outline/10 rounded-card p-6 shadow-sm">
+          <h2 className="text-lg font-bold font-display text-on-surface mb-3">Ingredientes</h2>
           {ingredientes.length === 0 ? (
             <p className="text-sm text-gray-400">No hay ingredientes disponibles</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-outline/10">
+                <thead className="bg-surface-container">
                   <tr>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Incluir</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Alérgeno</th>
-                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Removible</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Incluir</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
+                    <th className="px-3 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Alérgeno</th>
+                    <th className="px-3 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Removible</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-outline/10">
                   {ingredientes.map((ing) => {
                     const isSelected = selectedIngredientes.has(ing.id);
                     return (
-                      <tr key={ing.id} className="hover:bg-gray-50">
+                      <tr key={ing.id} className="hover:bg-surface-container/50 transition-colors">
                         <td className="px-3 py-2">
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleIngrediente(ing.id)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                            className="w-4 h-4 text-primary border-outline/20 rounded focus:ring-primary"
                           />
                         </td>
-                        <td className="px-3 py-2 text-sm text-gray-900">{ing.nombre}</td>
+                        <td className="px-3 py-2 text-sm text-on-surface font-medium">{ing.nombre}</td>
                         <td className="px-3 py-2 text-sm text-center">
                           {ing.es_alergeno ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-error-light text-error">
                               Alérgeno
                             </span>
                           ) : (
@@ -310,7 +310,7 @@ export const ProductFormPage: React.FC = () => {
                             checked={isSelected ? (selectedIngredientes.get(ing.id) ?? false) : false}
                             disabled={!isSelected}
                             onChange={(e) => setIngredienteRemovible(ing.id, e.target.checked)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded disabled:opacity-30"
+                            className="w-4 h-4 text-primary border-outline/20 rounded disabled:opacity-30 focus:ring-primary"
                           />
                         </td>
                       </tr>
@@ -326,14 +326,14 @@ export const ProductFormPage: React.FC = () => {
           <button
             type="submit"
             disabled={isSaving}
-            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="px-6 py-2 text-sm font-bold text-white bg-primary rounded-input hover:bg-primary-hover disabled:opacity-50 shadow-sm transition-colors"
           >
             {isSaving ? 'Guardando...' : isEdit ? 'Actualizar Producto' : 'Crear Producto'}
           </button>
           <button
             type="button"
             onClick={() => navigate('/admin/productos')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-semibold text-on-surface bg-surface-container rounded-input border border-outline/15 hover:bg-surface-container-high transition-colors"
           >
             Cancelar
           </button>

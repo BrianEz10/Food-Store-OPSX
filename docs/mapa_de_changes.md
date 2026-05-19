@@ -5,6 +5,7 @@
 > **Total HU**: 77 historias de usuario (US-000 a US-076)
 > **Total Changes**: 18 incrementos (+2 archivados = 20 total)
 > **Estrategia**: Solo los changes 🔴 Alta complejidad se dividen en backend/frontend
+> **UI/UX Overhaul**: Changes 14-18 para rediseño visual completo basado en Stitch (19 paneles)
 
 ---
 
@@ -22,49 +23,60 @@
 └───────────────────┘   └────────────────┘  │             └────────────────────┘  │
                               │             │                     │               │
                               │             │                     ▼               │
-                              │             │     ┌──────────────────────────┐    │
-                              ▼             │     │ 07b catalogo-publico✅   │    │
-                  ┌──────────────────────┐  │     └──────────────────────────┘    │
-                  │ 06 perfil-           │  │                     │               │
-                  │   direcciones✅      │──┼─────────────────────┤               ▼
-                  └──────────────────────┘  │                     │    ┌──────────────────┐
-                              │             │                     ▼    │ 07c gestion-✅   │
-                              │             │          ┌──────────────┐│     stock        │
-                              │             │          │ 08 carrito   │└──────────────────┘
-                              ▼             │          │    compras   │
-                  ┌──────────────────────┐  │          └──────┬───────┘
-                  │ 09a pedidos-backend  │◀─┘                 │
-                  │                      │◀───────────────────┘
-                  └──────────┬───────────┘
-                       ┌─────┼──────────────────────┐
-                       │     │                      │
-                       ▼     ▼                      ▼
-          ┌──────────────┐ ┌───────────────┐ ┌────────────────┐
-          │ 09b checkout │ │ 10 pagos-     │ │ 11a fsm-       │◀──┐
-          │     frontend │ │    mercadopago│─┘│     backend    │  │
-          └──────────────┘ └───────────────┘  └───────┬────────┘  │
-                                                 ┌────┼────┐      │
-                                                 │    │    │      │
-                                                 ▼    ▼    ▼      │
-                                     ┌───────┐┌──────┐┌──────┐    │
-                                     │ 11b   ││ 12   ││ 13   │    │
-                                     │visual.││admin ││dashb.│    │
-                                     └───────┘└──────┘└──────┘    │
-                                                                  │
-┌───────────────────┐   ┌────────────────┐                        │
-│ 02 setup-frontend │──▶│ 03b auth-      │                        │
-│    core ✅        │──▶│   frontend ✅  │                        │
-└───────────────────┘   └────────┬───────┘                        │
-                                 │                                │
-                                 ▼                                │
-                        ┌────────────────┐                        │
-                        │ 05 navegacion- │────────────────────────┘
-                        │   layout-base✅│
-                        └────────────────┘
+                              ▼             │     ┌──────────────────────────┐    │
+                   ┌──────────────────────┐  │     │ 07b catalogo-publico✅   │    │
+                   │ 06 perfil-           │  │     └──────────────────────────┘    │
+                   │   direcciones✅      │──┼─────────────────────┤               ▼
+                   └──────────────────────┘  │                     │    ┌──────────────────┐
+                               │             │                     ▼    │ 07c gestion-✅   │
+                               │             │          ┌──────────────┐│     stock        │
+                               ▼             │          │ 08 carrito   │└──────────────────┘
+                   ┌──────────────────────┐  │          │    compras   │
+                   │ 09a pedidos-backend  │◀─┘          └──────┬───────┘
+                   │                      │◀───────────────────┘
+                   └──────────┬───────────┘
+                        ┌─────┼──────────────────────┐
+                        │     │                      │
+                        ▼     ▼                      ▼
+           ┌──────────────┐ ┌───────────────┐ ┌────────────────┐
+           │ 09b checkout │ │ 10 pagos-     │ │ 11a fsm-       │◀──┐
+           │     frontend │ │    mercadopago│─┘│     backend    │  │
+           └──────────────┘ └───────────────┘  └───────┬────────┘  │
+                                                  ┌────┼────┐      │
+                                                  │    │    │      │
+                                                  ▼    ▼    ▼      │
+                                      ┌───────┐┌──────┐┌──────┐    │
+                                      │ 11b   ││ 12   ││ 13   │    │
+                                      │visual.││admin ││dashb.│    │
+                                      └───────┘└──────┘└──────┘    │
+                                                                   │
+ ┌───────────────────┐   ┌────────────────┐                        │
+ │ 02 setup-frontend │──▶│ 03b auth-      │                        │
+ │    core ✅        │──▶│   frontend ✅  │                        │
+ └───────────────────┘   └────────┬───────┘                        │
+                                  │                                │
+                                  ▼                                │
+                         ┌────────────────┐                        │
+                         │ 05 navegacion- │────────────────────────┘
+                         │   layout-base✅│
+                         └────────────────┘
 
-Leyenda:
-  ✅ = Archivado    ──▶ = depende de
-  Ruta crítica: 01→03a→04→07a→07b→08→09a→10→11a→12/13
+┌─────────────────────────┐
+│ 14 sistema-diseno-      │
+│    visual               │
+└──────────┬──────────────┘
+           │
+     ┌─────┼─────────────┬──────────────┐
+     ▼     ▼             ▼              ▼
+ ┌──────┐┌──────┐  ┌──────────┐  ┌──────────┐
+ │ 15   ││ 16   │  │ 17       │  │ 18       │
+ │auth  ││home  │  │dashboard │  │catalogo  │
+ └──────┘└──────┘  └──────────┘  └──────────┘
+
+ Leyenda:
+   ✅ = Archivado    ──▶ = depende de
+   Ruta crítica: 01→03a→04→07a→07b→08→09a→10→11a→12/13
+   Ruta UI/UX: 14→{15,16,17,18}
 ```
 
 ---
@@ -85,6 +97,12 @@ Leyenda:
 01 → 03a → 04 → 07a → 07b → 08 → 09a → 10 → 11a → 12/13
 ```
 
+### Ruta de UI/UX Overhaul
+
+```
+14 → {15, 16, 17, 18} (paralelos)
+```
+
 ### Paralelizables
 
 - **01 y 02** — Backend y frontend setup son independientes
@@ -93,6 +111,13 @@ Leyenda:
 - **07b y 07c** — Pueden ejecutarse en paralelo una vez que 07a está archivado
 - **09b** — Puede ejecutarse en paralelo con 10 una vez que 09a está archivado
 - **11b, 12, 13** — Los tres dependen solo de 11a, son paralelos entre sí
+- **15, 16, 17, 18** — Los cuatro dependen solo de 14, son paralelos entre sí
+
+### Ruta de UI/UX Overhaul
+
+```
+14 → {15, 16, 17, 18} (paralelos)
+```
 
 ---
 
@@ -118,8 +143,13 @@ Leyenda:
 | 11b | `visualizacion-pedidos` | US-049, 050, 051, 052 | 11a | ✅ Archivado |
 | 12 | `admin-usuarios-y-catalogo` | US-053, 054, 055, 064, 065 | 11a | ✅ Archivado |
 | 13 | `dashboard-metricas` | US-056, 057, 058, 059, 060 | 11a | ✅ Archivado |
+| 14 | `sistema-diseno-visual` | US-077 (UI/UX) | — | 🟡 Media |
+| 15 | `rediseño-auth-pages` | US-004, 005 (rediseño) | 14 | 🟢 Baja |
+| 16 | `mejora-homepage` | US-018 (rediseño), US-078 | 14 | 🟢 Baja |
+| 17 | `mejora-dashboard-visual` | US-056-060 (rediseño) | 14 | 🟢 Baja |
+| 18 | `mejora-catalogo-visual` | US-019-021 (rediseño) | 14 | 🟢 Baja |
 
-**Distribución**: 0 🔴 · 0 🟡 · 0 🟢 · 22 ✅ archivados
+**Distribución**: 0 🔴 · 1 🟡 · 4 🟢 · 22 ✅ archivados
 
 ---
 
@@ -459,6 +489,107 @@ Leyenda:
 
 ---
 
+## Change 14: `sistema-diseno-visual`
+
+| Campo | Valor |
+|---|---|
+| **Funcionalidad** | Design system "Vivid Modernity" completo: paleta de colores en tailwind.config.js, tipografía Outfit+Inter, radius tokens, sombras violet-tinted, espaciado consistente, layout base (header liviano + aside colapsable) |
+| **HU** | US-077 (UI/UX overhaul) |
+| **Depende de** | — |
+| **Complejidad** | 🟡 Media |
+
+**Entregables:**
+
+*Frontend:*
+- `tailwind.config.js` con paleta completa: primary `#b3193d`, secondary `#6d4e9f`, tertiary `#006a42`, surfaces `#fff8f7` → `#fde2e2`
+- Tipografía: Outfit (headlines) + Inter (body) — configurar en CSS + Tailwind
+- Tokens de radius: 8px cards/inputs, 12px modals, full para chips
+- Sombras violet-tinted suaves
+- Escala de espaciado 4px baseline
+- Layout base: Header liviano (toggle + search + theme + cart + avatar) + Aside colapsable (logo + nav por rol)
+- Unificar colores en componentes existentes: botones, badges, inputs, cards, tablas
+
+---
+
+## Change 15: `rediseño-auth-pages`
+
+| Campo | Valor |
+|---|---|
+| **Funcionalidad** | LoginPage y RegisterPage rediseñados con el design system Vivid Modernity — standalone (sin header/aside) |
+| **HU** | US-004, US-005 (rediseño visual) |
+| **Depende de** | **Change 14** (design system aplicado) |
+| **Complejidad** | 🟢 Baja |
+
+**Entregables:**
+
+*Frontend:*
+- LoginPage: centrado, logo Food Store, email+password, botón primary rojo, link a register
+- RegisterPage: nombre+apellido+email+teléfono+password+confirm, botón crear cuenta
+- Sin header/aside — layout standalone full-screen
+- Validación visual con colores del design system
+
+---
+
+## Change 16: `mejora-homepage`
+
+| Campo | Valor |
+|---|---|
+| **Funcionalidad** | HomePage rediseñada con hero visual, categorías destacadas, platos del día, promos y footer |
+| **HU** | US-018 (rediseño), US-078 (hero visual) |
+| **Depende de** | **Change 14** (design system aplicado) |
+| **Complejidad** | 🟢 Baja |
+
+**Entregables:**
+
+*Frontend:*
+- Hero section: "¿Qué querés comer hoy?" + CTA principal
+- Category cards: Pizzas, Pastas, Burgers, Postres, Bebidas, Ensaladas
+- Featured dishes grid con ProductCards
+- Daily promos section
+- Footer con info del negocio
+
+---
+
+## Change 17: `mejora-dashboard-visual`
+
+| Campo | Valor |
+|---|---|
+| **Funcionalidad** | DashboardPage rediseñado con KPI cards con gradientes, charts mejorados (Recharts), y panel de config |
+| **HU** | US-056-060 (rediseño visual) |
+| **Depende de** | **Change 14** (design system aplicado) |
+| **Complejidad** | 🟢 Baja |
+
+**Entregables:**
+
+*Frontend:*
+- 5 KPI cards grid con gradientes primary→secondary: Ventas Totales, Pedidos+today, Usuarios, Ticket Promedio, Productos Disponibles
+- LineChart (ventas/mes) con colores del design system
+- PieChart (pedidos/estado) con paleta de colores
+- BarChart (top productos) con gradientes
+- Panel de configuración del sistema
+
+---
+
+## Change 18: `mejora-catalogo-visual`
+
+| Campo | Valor |
+|---|---|
+| **Funcionalidad** | CatalogPage y ProductCard rediseñados con badges de categoría, empty states visuales, y filtros con chips |
+| **HU** | US-019-021 (rediseño visual) |
+| **Depende de** | **Change 14** (design system aplicado) |
+| **Complejidad** | 🟢 Baja |
+
+**Entregables:**
+
+*Frontend:*
+- ProductCard rediseñado: imagen 4:3, category badge top-left, nombre, desc corta, precio grande, badge tiempo "⏱ 25 min", botón circular (+)
+- Category filter chips con colores del design system
+- Grid responsive 3-4 columnas
+- Empty states visuales con ilustraciones
+- Paginación estilizada
+
+---
+
 ## Notas de Implementación
 
 > [!IMPORTANT]
@@ -472,3 +603,9 @@ Leyenda:
 
 > [!NOTE]
 > **Change 10** es el único 🔴 restante por decisión deliberada — MercadoPago es un dominio externo con SDK propio, webhooks asíncronos e idempotencia, que no se beneficia de partirse en backend/frontend separados.
+
+> [!TIP]
+> **Changes 14-18** son el UI/UX overhaul basado en los 19 paneles generados en Google Stitch. El change 14 es la base (design system) y 15-18 son paralelos — se pueden implementar simultáneamente una vez que 14 está archivado.
+
+> [!NOTE]
+> **Los 19 paneles de Stitch** ya están generados en el proyecto `Modern UI Style Guide` (projects/12111847708589704504) con el design system "Vivid Modernity" aplicado.

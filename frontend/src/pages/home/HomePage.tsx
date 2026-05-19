@@ -7,7 +7,7 @@ export function HomePage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center py-12">
-        <h1 className="text-4xl font-display font-bold text-primary-500 mb-4">
+        <h1 className="text-4xl font-display font-bold text-primary mb-4">
           Food Store
         </h1>
         {isAuthenticated && user ? (
@@ -53,7 +53,7 @@ function QuickActionCard({
   return (
     <a
       href={href}
-      className="block p-6 rounded-xl bg-white dark:bg-surface-800 border border-slate-200 dark:border-slate-700 hover:shadow-md hover:border-primary-300 dark:hover:border-primary-700 transition-all"
+      className="block p-6 rounded-card bg-white dark:bg-surface-800 border border-outline/10 hover:shadow-md hover:border-primary/30 transition-all"
     >
       <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1">
         {title}

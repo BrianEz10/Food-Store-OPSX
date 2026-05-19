@@ -97,19 +97,19 @@ export const ProductListPage: React.FC = () => {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Productos</h1>
+          <h1 className="text-2xl font-bold font-display text-on-surface">Productos</h1>
           <p className="text-sm text-gray-500 mt-1">Gestiona el catálogo de productos y stock</p>
         </div>
         <button
           onClick={() => navigate('/admin/productos/nuevo')}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          className="px-4 py-2 text-sm font-bold text-white bg-primary rounded-input hover:bg-primary-hover shadow-sm transition-colors"
         >
           + Nuevo Producto
         </button>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 text-sm text-red-700 bg-red-100 rounded-md">{error}</div>
+        <div className="mb-4 p-4 text-sm text-error bg-error-light rounded-input border border-error/20 font-medium">{error}</div>
       )}
 
       <div className="mb-4">
@@ -118,32 +118,32 @@ export const ProductListPage: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por nombre..."
-          className="w-full max-w-xs px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full max-w-xs px-3 py-2 text-sm border border-outline/20 rounded-input focus:outline-none focus:ring-2 focus:ring-primary text-on-surface bg-white"
         />
       </div>
 
       {isLoading ? (
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="bg-white border border-outline/10 rounded-card overflow-hidden shadow-sm">
+          <table className="min-w-full divide-y divide-outline/10">
+            <thead className="bg-surface-container">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categorías</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Stock</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Disponible</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Precio</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Categorías</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Disponible</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-outline/10">
               {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-32" /></td>
-                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-16" /></td>
-                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-24" /></td>
-                  <td className="px-4 py-3 text-center"><div className="h-4 bg-gray-200 rounded w-10 mx-auto" /></td>
-                  <td className="px-4 py-3 text-center"><div className="h-4 bg-gray-200 rounded w-6 mx-auto" /></td>
-                  <td className="px-4 py-3 text-right"><div className="h-4 bg-gray-200 rounded w-20 ml-auto" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-surface-container-high rounded w-32" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-surface-container-high rounded w-16" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-surface-container-high rounded w-24" /></td>
+                  <td className="px-4 py-3 text-center"><div className="h-4 bg-surface-container-high rounded w-10 mx-auto" /></td>
+                  <td className="px-4 py-3 text-center"><div className="h-4 bg-surface-container-high rounded w-6 mx-auto" /></td>
+                  <td className="px-4 py-3 text-right"><div className="h-4 bg-surface-container-high rounded w-20 ml-auto" /></td>
                 </tr>
               ))}
             </tbody>
@@ -151,23 +151,23 @@ export const ProductListPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="bg-white border border-outline/10 rounded-card overflow-hidden shadow-sm">
+            <table className="min-w-full divide-y divide-outline/10">
+              <thead className="bg-surface-container">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categorías</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Stock</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Disponible</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Precio</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Categorías</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Disponible</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-outline/10">
                 {productos.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{p.nombre}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">${p.precio_base.toFixed(2)}</td>
+                  <tr key={p.id} className="hover:bg-surface-container/50 transition-colors">
+                    <td className="px-4 py-3 text-sm font-bold text-on-surface font-display">{p.nombre}</td>
+                    <td className="px-4 py-3 text-sm text-on-surface font-medium">${p.precio_base.toFixed(2)}</td>
                     <td className="px-4 py-3 text-sm text-gray-500">—</td>
                     <td className="px-4 py-3 text-sm text-center">
                       {stockEditingId === p.id ? (
@@ -177,20 +177,20 @@ export const ProductListPage: React.FC = () => {
                             min={0}
                             value={stockValue}
                             onChange={(e) => setStockValue(Number(e.target.value))}
-                            className="w-16 px-1 py-0.5 text-sm border border-gray-300 rounded"
+                            className="w-16 px-1.5 py-0.5 text-sm border border-outline/20 rounded bg-white text-on-surface"
                             autoFocus
                           />
-                          <button onClick={() => handleStockUpdate(p.id)} className="text-green-600 hover:text-green-800 text-xs font-medium">
+                          <button onClick={() => handleStockUpdate(p.id)} className="text-tertiary hover:opacity-85 text-xs font-bold">
                             OK
                           </button>
-                          <button onClick={() => setStockEditingId(null)} className="text-red-600 hover:text-red-800 text-xs">
+                          <button onClick={() => setStockEditingId(null)} className="text-error hover:opacity-85 text-xs font-bold">
                             ✕
                           </button>
                         </span>
                       ) : (
                         <button
                           onClick={() => { setStockEditingId(p.id); setStockValue(p.stock_cantidad); }}
-                          className={`font-medium ${p.stock_cantidad === 0 ? 'text-red-600' : 'text-gray-900'} hover:underline`}
+                          className={`font-semibold ${p.stock_cantidad === 0 ? 'text-error' : 'text-on-surface'} hover:underline`}
                         >
                           {p.stock_cantidad}
                         </button>
@@ -201,19 +201,19 @@ export const ProductListPage: React.FC = () => {
                         type="checkbox"
                         checked={p.disponible}
                         onChange={() => handleToggleDisponible(p)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded cursor-pointer"
+                        className="w-4 h-4 text-primary border-outline/20 rounded cursor-pointer focus:ring-primary"
                       />
                     </td>
                     <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
                       <button
                         onClick={() => navigate(`/admin/productos/${p.id}/editar`)}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
+                        className="text-primary hover:text-primary-hover font-semibold mr-3 transition-colors"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDelete(p.id, p.nombre)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-error hover:text-error/95 font-semibold transition-colors"
                       >
                         Eliminar
                       </button>
@@ -237,14 +237,14 @@ export const ProductListPage: React.FC = () => {
               <button
                 disabled={skip === 0}
                 onClick={() => setSkip(Math.max(0, skip - limit))}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 py-1 text-sm border border-outline/20 rounded-input disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-container-high font-medium text-on-surface transition-colors"
               >
                 Anterior
               </button>
               <button
                 disabled={skip + limit >= total}
                 onClick={() => setSkip(skip + limit)}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 py-1 text-sm border border-outline/20 rounded-input disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-container-high font-medium text-on-surface transition-colors"
               >
                 Siguiente
               </button>

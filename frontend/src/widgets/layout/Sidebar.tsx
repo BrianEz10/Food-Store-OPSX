@@ -20,10 +20,9 @@ function SidebarItem({ item, collapsed }: { item: NavItem; collapsed: boolean })
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-          'hover:bg-primary-100 hover:text-primary-900',
-          'dark:hover:bg-primary-900/30 dark:hover:text-primary-100',
+          'hover:bg-primary-light hover:text-primary',
           isActive
-            ? 'bg-primary-500 text-white hover:bg-primary-600 hover:text-white dark:bg-primary-600'
+            ? 'bg-primary text-white hover:bg-primary-hover hover:text-white dark:bg-primary'
             : 'text-slate-600 dark:text-slate-300',
         )
       }
@@ -41,7 +40,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'hidden lg:flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-surface-900 border-r border-slate-200 dark:border-slate-700 transition-all duration-200 z-30',
+        'hidden lg:flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] bg-surface-container dark:bg-surface-900 border-r border-outline/20 dark:border-slate-700 transition-all duration-200 z-30',
         collapsed ? 'w-16' : 'w-60',
       )}
     >
@@ -53,7 +52,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
       </nav>
 
       {/* Collapse toggle */}
-      <div className="p-2 border-t border-slate-200 dark:border-slate-700">
+      <div className="p-2 border-t border-outline/20 dark:border-slate-700">
         <button
           onClick={onToggleCollapse}
           className="flex items-center justify-center w-full p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"

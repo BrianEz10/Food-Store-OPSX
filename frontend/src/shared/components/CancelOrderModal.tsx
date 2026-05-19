@@ -24,20 +24,20 @@ export const CancelOrderModal: React.FC<CancelOrderModalProps> = ({ pedidoId, is
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Cancelar Pedido</h3>
+      <div className="bg-white rounded-modal shadow-xl max-w-md w-full mx-4 p-6 border border-outline/10">
+        <h3 className="text-lg font-bold font-display text-on-surface mb-2">Cancelar Pedido</h3>
         <p className="text-sm text-gray-500 mb-4">
           ¿Estás seguro de cancelar este pedido? Esta acción no se puede deshacer.
         </p>
         <div className="mb-4">
           <label htmlFor="motivo" className="block text-sm font-medium text-gray-700 mb-1">
-            Motivo de cancelación <span className="text-red-500">*</span>
+            Motivo de cancelación <span className="text-error">*</span>
           </label>
           <textarea
             id="motivo"
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            className="w-full border border-outline/20 rounded-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-error focus:border-error bg-white text-on-surface"
             rows={3}
             placeholder="Describí el motivo..."
             required
@@ -46,14 +46,14 @@ export const CancelOrderModal: React.FC<CancelOrderModalProps> = ({ pedidoId, is
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            className="px-4 py-2 text-sm font-medium text-on-surface bg-surface-container rounded-input hover:bg-surface-container-high transition-colors"
           >
             Volver
           </button>
           <button
             onClick={handleCancel}
             disabled={!motivo.trim() || transitionMutation.isPending}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-white bg-error rounded-input hover:bg-error/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {transitionMutation.isPending ? 'Cancelando...' : 'Sí, cancelar pedido'}
           </button>

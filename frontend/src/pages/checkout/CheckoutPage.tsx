@@ -45,7 +45,7 @@ export const CheckoutPage = () => {
       <div className="flex flex-col items-center justify-center p-8">
         <h2 className="text-2xl font-bold mb-4">Tu carrito está vacío</h2>
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-4 py-2 bg-primary text-white rounded-input hover:bg-primary-hover transition-colors"
           onClick={() => navigate('/catalogo')}
         >
           Ir al catálogo
@@ -59,13 +59,13 @@ export const CheckoutPage = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-5xl">
-      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+      <h1 className="text-3xl font-bold font-display text-on-surface mb-8">Checkout</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Columna Izquierda: Dirección y Notas */}
         <div className="space-y-6">
-          <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-xl font-semibold mb-4">Dirección de Entrega</h2>
+          <section className="bg-white p-6 rounded-card shadow-sm border border-outline/10">
+            <h2 className="text-xl font-bold font-display text-on-surface mb-4">Dirección de Entrega</h2>
             {isLoadingDirecciones ? (
               <p>Cargando direcciones...</p>
             ) : direcciones && direcciones.length > 0 ? (
@@ -73,10 +73,10 @@ export const CheckoutPage = () => {
                 {direcciones.map((dir) => (
                   <label
                     key={dir.id}
-                    className={`block p-4 border rounded-lg cursor-pointer transition-colors ${
+                    className={`block p-4 border rounded-card cursor-pointer transition-colors ${
                       selectedDireccionId === dir.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
+                        ? 'border-primary bg-primary-light'
+                        : 'border-outline/10 hover:border-primary/30'
                     }`}
                   >
                     <div className="flex items-center">
@@ -86,7 +86,7 @@ export const CheckoutPage = () => {
                         value={dir.id}
                         checked={selectedDireccionId === dir.id}
                         onChange={() => setSelectedDireccionId(dir.id)}
-                        className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
                       />
                       <div className="ml-3">
                         <span className="block text-sm font-medium text-gray-900">
@@ -104,7 +104,7 @@ export const CheckoutPage = () => {
               <div className="text-center p-4 border border-dashed rounded-lg">
                 <p className="text-gray-500 mb-4">No tenés direcciones guardadas.</p>
                 <button
-                  className="text-blue-600 hover:underline"
+                  className="text-secondary hover:text-secondary-hover hover:underline transition-colors"
                   onClick={() => navigate('/profile')}
                 >
                   Agregar una dirección en tu perfil
@@ -113,10 +113,10 @@ export const CheckoutPage = () => {
             )}
           </section>
 
-          <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-xl font-semibold mb-4">Notas para el pedido</h2>
+          <section className="bg-white p-6 rounded-card shadow-sm border border-outline/10">
+            <h2 className="text-xl font-bold font-display text-on-surface mb-4">Notas para el pedido</h2>
             <textarea
-              className="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-outline/10 rounded-input focus:ring-primary focus:border-primary"
               rows={3}
               placeholder="Ej: Tocar timbre 2 veces, dejar en portería..."
               value={notas}
@@ -127,8 +127,8 @@ export const CheckoutPage = () => {
 
         {/* Columna Derecha: Resumen de Orden */}
         <div className="space-y-6">
-          <section className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-            <h2 className="text-xl font-semibold mb-6">Resumen de la Orden</h2>
+          <section className="bg-surface-container p-6 rounded-card border border-outline/10">
+            <h2 className="text-xl font-bold font-display text-on-surface mb-6">Resumen de la Orden</h2>
             
             <div className="flow-root mb-6">
               <ul className="-my-4 divide-y divide-gray-200">
@@ -139,7 +139,7 @@ export const CheckoutPage = () => {
                         {item.cantidad}x {item.nombre}
                       </span>
                       {item.exclusiones && item.exclusiones.length > 0 && (
-                        <span className="text-sm text-red-500">
+                        <span className="text-sm text-error">
                           Sin {item.exclusiones.length} ingrediente(s)
                         </span>
                       )}
@@ -170,18 +170,18 @@ export const CheckoutPage = () => {
             <button
               onClick={handleConfirmOrder}
               disabled={!selectedDireccionId || isPending}
-              className={`w-full mt-8 py-3 px-4 rounded-lg font-medium text-white transition-colors
+              className={`w-full mt-8 py-3 px-4 rounded-input font-medium text-white transition-colors
                 ${
                   !selectedDireccionId || isPending
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 shadow-md'
+                    : 'bg-primary hover:bg-primary-hover shadow-md'
                 }
               `}
             >
               {isPending ? 'Procesando...' : 'Confirmar Pedido'}
             </button>
             {!selectedDireccionId && (
-              <p className="text-sm text-red-500 text-center mt-2">
+              <p className="text-sm text-error text-center mt-2">
                 Seleccioná una dirección para continuar
               </p>
             )}

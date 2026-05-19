@@ -77,7 +77,7 @@ export function CatalogPage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+        <h1 className="text-2xl font-bold font-display text-on-surface">
           Catálogo
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">

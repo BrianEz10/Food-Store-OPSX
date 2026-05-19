@@ -57,6 +57,20 @@ async def get_current_user(
     return user
 
 
+async def get_current_active_user(
+    current_user: Usuario = Depends(get_current_user),
+) -> Usuario:
+    """
+    Extiende get_current_user validando que el usuario esté activo.
+
+    Raises:
+        UnauthorizedError: Si el usuario fue desactivado o eliminado.
+    """
+    if current_user.eliminado_en is not None:
+        raise UnauthorizedError("Usuario desactivado o eliminado")
+    return current_user
+
+
 def require_role(allowed_roles: list[str]):
     """
     Factory de dependencia que verifica que el usuario tenga

@@ -31,13 +31,13 @@ export function ProductCard({ product }: ProductCardProps) {
     <Link
       to={`/producto/${id}`}
       className={cn(
-        'group flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm transition-all',
-        'hover:shadow-md hover:border-primary-200',
-        'dark:border-slate-700 dark:bg-surface-800 dark:hover:border-primary-600',
+        'group flex flex-col rounded-card border border-outline/10 bg-white shadow-sm transition-all',
+        'hover:shadow-md hover:border-primary/30',
+        'dark:border-slate-700 dark:bg-surface-800 dark:hover:border-primary/50',
       )}
     >
       {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden rounded-t-xl bg-slate-100 dark:bg-slate-800">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-t-[8px] bg-slate-100 dark:bg-slate-800">
         {imagen_url ? (
           <img
             src={imagen_url}
@@ -53,8 +53,8 @@ export function ProductCard({ product }: ProductCardProps) {
           onClick={handleAddToCart}
           className={cn(
             'absolute bottom-2 right-2 inline-flex items-center gap-1.5 rounded-full',
-            'bg-primary-500 px-3 py-1.5 text-xs font-medium text-white shadow',
-            'hover:bg-primary-600 transition-colors',
+            'bg-primary px-3 py-1.5 text-xs font-medium text-white shadow',
+            'hover:bg-primary-hover transition-colors',
             'opacity-0 group-hover:opacity-100',
           )}
         >
@@ -65,7 +65,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Info */}
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="font-semibold text-slate-800 dark:text-slate-100 line-clamp-2">
+        <h3 className="font-semibold text-on-surface dark:text-slate-100 line-clamp-2">
           {nombre}
         </h3>
 
@@ -76,7 +76,7 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
 
         <div className="mt-auto pt-2">
-          <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
+          <span className="text-lg font-bold text-primary dark:text-primary-400">
             ${precio_base.toFixed(2)}
           </span>
         </div>

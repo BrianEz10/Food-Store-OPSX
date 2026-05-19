@@ -46,8 +46,8 @@ export const PedidoDetailPage: React.FC = () => {
   if (error && (error as any).response?.status === 403) {
     return (
       <div className="p-6 max-w-4xl mx-auto text-center py-16">
-        <p className="text-red-600 text-lg mb-2">No tienes permiso para ver este pedido</p>
-        <Link to="/mis-pedidos" className="text-blue-600 hover:underline">Volver a Mis Pedidos</Link>
+        <p className="text-error text-lg mb-2">No tienes permiso para ver este pedido</p>
+        <Link to="/mis-pedidos" className="text-primary hover:text-primary-hover transition-colors">Volver a Mis Pedidos</Link>
       </div>
     );
   }
@@ -56,7 +56,7 @@ export const PedidoDetailPage: React.FC = () => {
     return (
       <div className="p-6 max-w-4xl mx-auto text-center py-16">
         <p className="text-gray-500 text-lg mb-2">Pedido no encontrado</p>
-        <Link to="/mis-pedidos" className="text-blue-600 hover:underline">Volver a Mis Pedidos</Link>
+        <Link to="/mis-pedidos" className="text-primary hover:text-primary-hover transition-colors">Volver a Mis Pedidos</Link>
       </div>
     );
   }
@@ -77,15 +77,15 @@ export const PedidoDetailPage: React.FC = () => {
     <div className="p-6 max-w-4xl mx-auto">
       <Link
         to={isStaff ? '/admin/pedidos' : '/mis-pedidos'}
-        className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block"
+        className="text-sm text-primary hover:text-primary-hover mb-4 inline-block font-medium transition-colors"
       >
         ← Volver
       </Link>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+      <div className="bg-white border border-outline/10 rounded-card p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold font-display text-on-surface">
               Pedido #{String(pedido.id).padStart(6, '0')}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
@@ -96,7 +96,7 @@ export const PedidoDetailPage: React.FC = () => {
         </div>
 
         {pedido.pago && (
-          <div className="flex items-center gap-2 mt-2 pt-4 border-t border-gray-100">
+          <div className="flex items-center gap-2 mt-2 pt-4 border-t border-outline/10">
             <span className="text-sm text-gray-500">Estado del pago:</span>
             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
               pedido.pago.pago_estado === 'approved' ? 'bg-green-100 text-green-800' :
@@ -112,10 +112,10 @@ export const PedidoDetailPage: React.FC = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-outline/10">
           <div>
             <span className="text-xs text-gray-400">Total</span>
-            <p className="text-lg font-bold text-gray-900">${formatCurrency(pedido.total)}</p>
+            <p className="text-lg font-bold text-on-surface">${formatCurrency(pedido.total)}</p>
           </div>
           <div>
             <span className="text-xs text-gray-400">Costo de envío</span>
@@ -130,13 +130,13 @@ export const PedidoDetailPage: React.FC = () => {
         </div>
 
         {isStaff && (
-          <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+          <div className="flex gap-2 mt-4 pt-4 border-t border-outline/10">
             {availableTransitions.map((estadoDestino) => (
               <button
                 key={estadoDestino}
                 onClick={() => handleTransition(estadoDestino)}
                 disabled={transitionMutation.isPending}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-input hover:bg-primary-hover disabled:opacity-50 transition-colors"
               >
                 {STATUS_LABELS[estadoDestino] || estadoDestino}
               </button>
@@ -145,7 +145,7 @@ export const PedidoDetailPage: React.FC = () => {
               <button
                 onClick={() => setShowCancelModal(true)}
                 disabled={transitionMutation.isPending}
-                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-error bg-error-light rounded-input hover:bg-error-light/80 disabled:opacity-50 transition-colors"
               >
                 Cancelar pedido
               </button>
@@ -154,9 +154,9 @@ export const PedidoDetailPage: React.FC = () => {
         )}
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Productos</h2>
-        <table className="min-w-full divide-y divide-gray-200">
+      <div className="bg-white border border-outline/10 rounded-card p-6 mb-6">
+        <h2 className="text-lg font-bold font-display text-on-surface mb-4">Productos</h2>
+        <table className="min-w-full divide-y divide-outline/10">
           <thead>
             <tr>
               <th className="text-left text-xs font-medium text-gray-500 uppercase pb-2">Producto</th>
@@ -165,7 +165,7 @@ export const PedidoDetailPage: React.FC = () => {
               <th className="text-right text-xs font-medium text-gray-500 uppercase pb-2">Subtotal</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-outline/10">
             {pedido.detalles.map((det) => (
               <tr key={det.id}>
                 <td className="py-3 text-sm text-gray-900">
@@ -187,7 +187,7 @@ export const PedidoDetailPage: React.FC = () => {
           <tfoot>
             <tr>
               <td colSpan={3} className="pt-3 text-sm text-gray-500 text-right font-medium">Total</td>
-              <td className="pt-3 text-sm text-gray-900 font-bold text-right">
+              <td className="pt-3 text-sm text-on-surface font-bold text-right">
                 ${formatCurrency(pedido.total)}
               </td>
             </tr>
@@ -195,8 +195,8 @@ export const PedidoDetailPage: React.FC = () => {
         </table>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Historial de Estados</h2>
+      <div className="bg-white border border-outline/10 rounded-card p-6">
+        <h2 className="text-lg font-bold font-display text-on-surface mb-4">Historial de Estados</h2>
         <OrderTimeline historial={pedido.historial} />
       </div>
 

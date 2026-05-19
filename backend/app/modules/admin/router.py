@@ -6,7 +6,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from app.core.security import get_current_active_user, require_role
+from app.core.dependencies import get_current_active_user, require_role
 from app.modules.admin.schemas import (
     AdminUsuarioDetailResponse,
     AdminUsuarioListResponse,

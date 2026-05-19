@@ -5,37 +5,65 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      black: '#000000',
+      white: '#ffffff',
+      
+      // Vivid Modernity Brand Colors
+      primary: {
+        DEFAULT: '#b3193d',
+        hover: '#961130',
+        light: '#ffe9e9',
+      },
+      secondary: {
+        DEFAULT: '#6d4e9f',
+        hover: '#5c3f8a',
+        light: '#f3e8ff',
+      },
+      tertiary: {
+        DEFAULT: '#006a42',
+        hover: '#005735',
+        light: '#e8f5e9',
+      },
+      surface: {
+        DEFAULT: '#fff8f7',
+        container: '#ffe9e9',
+        'container-high': '#fde2e2',
+      },
+      error: {
+        DEFAULT: '#ba1a1a',
+        light: '#ffebee',
+      },
+      'on-surface': '#261819',
+      outline: '#8e7071',
+
+      // Warm Gray scale mapping to outline/on-surface to maintain styling compatibility
+      gray: {
+        50: '#fcfaf9',
+        100: '#f8f4f3',
+        200: '#f1ebea',
+        300: '#e3d9d8',
+        400: '#c9b9b8',
+        500: '#a79594',
+        600: '#8e7071',
+        700: '#5b4a49',
+        800: '#3d2f30',
+        900: '#261819',
+      }
+    },
+    fontFamily: {
+      sans: ['Inter', 'system-ui', 'sans-serif'],
+      display: ['Outfit', 'system-ui', 'sans-serif'],
+    },
     extend: {
-      colors: {
-        primary: { 
-          50: '#fdf3f4',
-          100: '#fce5e8',
-          500: '#e94560', 
-          900: '#881b2b'
-        },
-        secondary: {
-          50: '#f8f9fa',
-          500: '#533483',
-        },
-        surface: {
-          50: '#ffffff',
-          100: '#f3f4f6',
-          900: '#1a1a2e',
-        },
-        danger: {
-          500: '#ef4444',
-        },
-        success: {
-          500: '#22c55e',
-        },
-        warning: {
-          500: '#f59e0b',
-        },
-      },
-      fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Outfit', 'system-ui', 'sans-serif'],
-      },
+      borderRadius: {
+        'card': '8px',
+        'input': '8px',
+        'modal': '12px',
+        'chip': '9999px',
+      }
     },
   },
   plugins: [],

@@ -53,15 +53,15 @@ export function ProductDetailPage() {
           <button
             onClick={() => refetch()}
             className={cn(
-              'rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white',
-              'hover:bg-primary-600 transition-colors',
+              'rounded-input bg-primary px-4 py-2 text-sm font-medium text-white',
+              'hover:bg-primary-hover transition-colors',
             )}
           >
             Reintentar
           </button>
           <Link
             to="/catalogo"
-            className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400"
+            className="text-sm font-medium text-primary hover:text-primary-hover dark:text-primary-400"
           >
             Volver al catálogo
           </Link>
@@ -87,8 +87,8 @@ export function ProductDetailPage() {
           <Link
             to="/catalogo"
             className={cn(
-              'rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white',
-              'hover:bg-primary-600 transition-colors',
+              'rounded-input bg-primary px-4 py-2 text-sm font-medium text-white',
+              'hover:bg-primary-hover transition-colors',
             )}
           >
             Volver al catálogo
@@ -126,7 +126,7 @@ export function ProductDetailPage() {
       {/* Back button */}
       <Link
         to="/catalogo"
-        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400"
+        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-hover dark:text-primary-400"
       >
         <ArrowLeft className="size-4" />
         Volver al catálogo
@@ -134,7 +134,7 @@ export function ProductDetailPage() {
 
       <div className="grid gap-8 md:grid-cols-2">
         {/* Product image */}
-        <div className="aspect-[4/3] overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+        <div className="aspect-[4/3] overflow-hidden rounded-card bg-slate-100 dark:bg-slate-800">
           {imagen_url ? (
             <img
               src={imagen_url}
@@ -150,7 +150,7 @@ export function ProductDetailPage() {
 
         {/* Product info */}
         <div className="flex flex-col gap-4">
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          <h1 className="text-2xl font-bold font-display text-on-surface dark:text-slate-100">
             {nombre}
           </h1>
 
@@ -160,7 +160,7 @@ export function ProductDetailPage() {
               {categorias.map((cat) => (
                 <span
                   key={cat.id}
-                  className="rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
+                  className="rounded-full bg-primary-light px-3 py-1 text-xs font-medium text-primary dark:bg-primary-900/30 dark:text-primary-300"
                 >
                   {cat.nombre}
                 </span>
@@ -169,7 +169,7 @@ export function ProductDetailPage() {
           )}
 
           {/* Price */}
-          <p className="text-3xl font-bold text-primary-600 dark:text-primary-400">
+          <p className="text-3xl font-bold text-primary dark:text-primary-400">
             ${precio_base.toFixed(2)}
           </p>
 
@@ -242,13 +242,13 @@ export function ProductDetailPage() {
                   .map((ing) => (
                     <label
                       key={ing.id}
-                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800"
+                      className="flex cursor-pointer items-center gap-2 rounded-card border border-outline/10 px-3 py-2 text-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800"
                     >
                       <input
                         type="checkbox"
                         checked={!selectedExclusiones.includes(ing.id)}
                         onChange={() => toggleExclusion(ing.id)}
-                        className="size-4 rounded border-slate-300 text-primary-500 focus:ring-primary-500 dark:border-slate-600"
+                        className="size-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600"
                       />
                       <span className="text-slate-700 dark:text-slate-300">{ing.nombre}</span>
                       {ing.es_alergeno && (
@@ -266,9 +266,9 @@ export function ProductDetailPage() {
           <button
             onClick={handleAddToCart}
             className={cn(
-              'mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg',
-              'bg-primary-500 px-6 py-3 text-sm font-semibold text-white',
-              'hover:bg-primary-600 transition-colors',
+              'mt-2 inline-flex w-full items-center justify-center gap-2 rounded-input',
+              'bg-primary px-6 py-3 text-sm font-semibold text-white',
+              'hover:bg-primary-hover transition-colors',
             )}
           >
             <ShoppingCart className="size-5" />

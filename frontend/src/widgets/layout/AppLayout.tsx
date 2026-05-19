@@ -13,7 +13,7 @@ export function AppLayout() {
   const [cartOpen, setCartOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-surface-900">
+    <div className="min-h-screen bg-surface dark:bg-surface-900">
       {/* Header */}
       <Header
         onToggleSidebar={() => setSidebarCollapsed((prev) => !prev)}

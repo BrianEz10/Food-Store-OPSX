@@ -5,8 +5,10 @@ Conexión a la base de datos PostgreSQL con SQLModel + AsyncSession.
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlmodel import SQLModel
+
+Base = declarative_base()
 
 from app.core.config import get_settings
 
