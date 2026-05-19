@@ -58,7 +58,7 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
         <div className="flex items-center gap-3">
           <button
             onClick={onToggleSidebar}
-            className="lg:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="lg:hidden p-2 rounded-lg text-on-surface dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="Abrir menú"
           >
             <Menu className="size-5" />
@@ -76,7 +76,7 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
           {/* Theme toggle */}
           <button
             onClick={cycleTheme}
-            className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-lg text-on-surface dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title={themeLabels[theme]}
           >
             <ThemeIcon className="size-5" />
@@ -86,7 +86,7 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
           {isAuthenticated && (
             <button
               onClick={onCartClick}
-              className="relative p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="relative p-2 rounded-lg text-on-surface dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Carrito"
             >
               <ShoppingCart className="size-5" />
@@ -101,12 +101,12 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
           {/* Authenticated user info */}
           {isAuthenticated && user ? (
             <div className="flex items-center gap-3">
-              <span className="hidden sm:block text-sm font-medium text-slate-700 dark:text-slate-200">
+                <span className="hidden sm:block text-sm font-medium text-on-surface dark:text-slate-200">
                 {user.nombre} {user.apellido}
               </span>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-on-surface dark:text-slate-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
               >
                 <LogOut className="size-4" />
                 <span className="hidden sm:inline">Salir</span>
@@ -117,7 +117,7 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-on-surface dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 Ingresar
               </Link>

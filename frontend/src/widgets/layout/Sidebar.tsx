@@ -23,7 +23,7 @@ function SidebarItem({ item, collapsed }: { item: NavItem; collapsed: boolean })
           'hover:bg-primary-light hover:text-primary',
           isActive
             ? 'bg-primary text-white hover:bg-primary-hover hover:text-white dark:bg-primary'
-            : 'text-slate-600 dark:text-slate-300',
+            : 'text-on-surface dark:text-slate-300',
         )
       }
       title={collapsed ? item.label : undefined}
@@ -55,7 +55,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
       <div className="p-2 border-t border-outline/20 dark:border-slate-700">
         <button
           onClick={onToggleCollapse}
-          className="flex items-center justify-center w-full p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="flex items-center justify-center w-full p-2 rounded-lg text-on-surface hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
         >
           {collapsed ? <ChevronRight className="size-5" /> : <ChevronLeft className="size-5" />}
