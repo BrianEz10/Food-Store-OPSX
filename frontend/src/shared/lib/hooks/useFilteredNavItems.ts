@@ -14,10 +14,15 @@ export function useFilteredNavItems(): FilteredNavItems {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   return useMemo(() => {
+    const isStaff = user?.roles.some((r) => r === 'ADMIN' || r === 'STOCK' || r === 'PEDIDOS');
+
     const filtered = NAV_ITEMS.filter((item) => {
-      // Items with roles=['*'] are visible to everyone
-      if (item.roles.includes('*' as Role)) return true;
-      // If not authenticated, only show roles=['*'] items
+      // Items with roles=['*'] are public — shown to unauthenticated users and CLIENTs only
+      if (item.roles.includes('*' as Role)) {
+        if (!isAuthenticated || !user) return true;        // No logueado → ve público
+        return !isStaff;                                     // Staff → NO ve público; CLIENT → sí
+      }
+      // If not authenticated, only show roles=['*'] items (already handled above)
       if (!isAuthenticated || !user) return false;
       // Check if user has any of the required roles
       return item.roles.some((role) => user.roles.includes(role));

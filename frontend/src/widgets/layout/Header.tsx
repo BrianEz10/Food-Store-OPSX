@@ -82,8 +82,8 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
             <ThemeIcon className="size-5" />
           </button>
 
-          {/* Cart button */}
-          {isAuthenticated && (
+          {/* Cart button — solo para clientes */}
+          {isAuthenticated && user?.roles.includes('CLIENT') && (
             <button
               onClick={onCartClick}
               className="relative p-2 rounded-lg text-on-surface dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
