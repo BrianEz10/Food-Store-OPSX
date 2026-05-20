@@ -32,6 +32,9 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
   const setTheme = useUIStore((s) => s.setTheme);
   const itemCount = useCartStore((s) => s.itemCount);
 
+  const isStaff = user?.roles.some((r) => r === 'ADMIN' || r === 'STOCK' || r === 'PEDIDOS');
+  const logoSite = isStaff ? '/dashboard' : '/';
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -64,7 +67,7 @@ export function Header({ onToggleSidebar, onCartClick }: HeaderProps) {
             <Menu className="size-5" />
           </button>
 
-          <Link to="/" className="flex items-center gap-2">
+          <Link to={logoSite} className="flex items-center gap-2">
             <span className="text-xl font-display font-bold text-primary">
               Food Store
             </span>
