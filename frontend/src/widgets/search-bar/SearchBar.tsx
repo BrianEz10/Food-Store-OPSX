@@ -51,7 +51,7 @@ export function SearchBar({
 
   return (
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-outline/60" />
       <input
         ref={inputRef}
         type="text"
@@ -59,16 +59,16 @@ export function SearchBar({
         onChange={(e) => handleChange(e.target.value)}
         placeholder={placeholder}
         className={cn(
-          'w-full rounded-lg border border-slate-300 py-2 pl-10 pr-10 text-sm',
-          'bg-white text-slate-800 placeholder-slate-400',
-          'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20',
+          'w-full rounded-input border border-outline/10 py-2 pl-10 pr-10 text-sm',
+          'bg-white text-on-surface placeholder-outline/60',
+          'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
           'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500',
         )}
       />
       {localValue && (
         <button
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-outline/60 hover:text-on-surface/80 dark:hover:text-slate-300"
         >
           <X className="size-4" />
         </button>

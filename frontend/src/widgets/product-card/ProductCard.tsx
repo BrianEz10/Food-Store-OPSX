@@ -8,10 +8,23 @@ interface ProductCardProps {
   product: ProductListItem;
 }
 
+const ES_NUEVO_DIAS = 7;
+
+function isRecentlyCreated(creadoEn: string): boolean {
+  const creado = Date.parse(creadoEn);
+  if (isNaN(creado)) return false;
+  const ahora = Date.now();
+  const diffMs = ahora - creado;
+  return diffMs >= 0 && diffMs < ES_NUEVO_DIAS * 24 * 60 * 60 * 1000;
+}
+
 export function ProductCard({ product }: ProductCardProps) {
-  const { id, nombre, descripcion, imagen_url, precio_base } = product;
+  const { id, nombre, descripcion, imagen_url, precio_base, stock_cantidad, disponible, creado_en } = product;
   const addItem = useCartStore((s) => s.addItem);
   const addToast = useUIStore((s) => s.addToast);
+
+  const esNuevo = isRecentlyCreated(creado_en);
+  const hayStock = disponible && stock_cantidad > 0;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -37,7 +50,7 @@ export function ProductCard({ product }: ProductCardProps) {
       )}
     >
       {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden rounded-t-[8px] bg-slate-100 dark:bg-slate-800">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-t-[8px] bg-surface-container dark:bg-slate-800">
         {imagen_url ? (
           <img
             src={imagen_url}
@@ -45,10 +58,29 @@ export function ProductCard({ product }: ProductCardProps) {
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-slate-300 dark:text-slate-600">
+          <div className="flex h-full items-center justify-center text-outline/40 dark:text-slate-600">
             <ImageOff className="size-10" />
           </div>
         )}
+
+        {/* Badges */}
+        <div className="absolute left-2 top-2 flex flex-col gap-1.5">
+          {esNuevo && (
+            <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white shadow-sm">
+              Nuevo
+            </span>
+          )}
+          {hayStock ? (
+            <span className="rounded-full bg-tertiary px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white shadow-sm">
+              Disponible
+            </span>
+          ) : (
+            <span className="rounded-full bg-error px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white shadow-sm">
+              Sin stock
+            </span>
+          )}
+        </div>
+
         <button
           onClick={handleAddToCart}
           className={cn(
@@ -65,12 +97,12 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Info */}
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="font-semibold text-on-surface dark:text-slate-100 line-clamp-2">
+        <h3 className="font-display font-semibold text-on-surface dark:text-slate-100 line-clamp-2">
           {nombre}
         </h3>
 
         {descripcion && (
-          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+          <p className="text-xs text-outline/60 dark:text-slate-400 line-clamp-2">
             {descripcion}
           </p>
         )}
