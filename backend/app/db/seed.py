@@ -20,6 +20,7 @@ from app.core.security import hash_password
 # Importar TODOS los modelos para que SQLAlchemy resuelva relaciones
 import app.modules.categorias.model  # noqa: F401
 import app.modules.direcciones.model  # noqa: F401
+import app.modules.ingredientes.model  # noqa: F401
 import app.modules.productos.model  # noqa: F401
 import app.modules.refreshtokens.model  # noqa: F401
 

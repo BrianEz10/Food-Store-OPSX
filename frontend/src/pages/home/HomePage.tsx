@@ -2,7 +2,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '@/shared/stores';
 import { useQuery } from '@tanstack/react-query';
 import { categoriasApi } from '@/features/categorias/api';
-import { Pizza, Utensils, Flame, Cookie, Coffee, Leaf, ChevronRight, FolderTree, Tag, Truck, Percent, Instagram, Phone, Mail, Clock } from 'lucide-react';
+import { Pizza, Utensils, Flame, Cookie, Coffee, Leaf, ChevronRight, FolderTree, Tag, Truck, Percent, Globe, Phone, Mail, Clock, MapPin } from 'lucide-react';
 import { useProducts } from '@/entities/product';
 import { ProductGrid } from '@/widgets/product-grid';
 
@@ -328,9 +328,9 @@ export function HomePage() {
                 <a
                   href="#"
                   className="size-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                  aria-label="Instagram"
+                  aria-label="Redes sociales"
                 >
-                  <Instagram className="size-5" />
+                  <Globe className="size-5" />
                 </a>
               </div>
             </div>
