@@ -48,8 +48,8 @@ export const ConfirmToggleModal: React.FC<ConfirmToggleModalProps> = ({
             disabled={toggleMutation.isPending}
             className={`px-4 py-2 text-sm font-medium text-white rounded-md disabled:opacity-50 ${
               activo
-                ? 'bg-red-600 hover:bg-red-700'
-                : 'bg-green-600 hover:bg-green-700'
+                ? 'bg-error hover:bg-error'
+                : 'bg-tertiary hover:bg-tertiary-hover'
             }`}
           >
             {toggleMutation.isPending

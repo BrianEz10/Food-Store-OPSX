@@ -10,18 +10,23 @@ const iconMap = {
   warning: AlertTriangle,
 };
 
+/** El proyecto tiene paleta de colores custom (tailwind.config.js).
+ *  No existen slate, green, red, blue, yellow — usamos gray y los
+ *  colores semánticos del proyecto (primary, tertiary, error, secondary). */
 const colorMap = {
-  success: 'border-green-500 bg-green-50 dark:bg-green-900/20',
-  error: 'border-red-500 bg-red-50 dark:bg-red-900/20',
-  info: 'border-blue-500 bg-blue-50 dark:bg-blue-900/20',
-  warning: 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20',
+  success:
+    'border-tertiary bg-gray-50 dark:bg-gray-800 dark:border-tertiary',
+  error: 'border-error bg-gray-50 dark:bg-gray-800 dark:border-error',
+  info: 'border-primary bg-gray-50 dark:bg-gray-800 dark:border-primary',
+  warning:
+    'border-secondary bg-gray-50 dark:bg-gray-800 dark:border-secondary',
 };
 
 const iconColorMap = {
-  success: 'text-green-500',
-  error: 'text-red-500',
-  info: 'text-blue-500',
-  warning: 'text-yellow-500',
+  success: 'text-tertiary',
+  error: 'text-error',
+  info: 'text-primary',
+  warning: 'text-secondary',
 };
 
 function ToastItem({
@@ -60,18 +65,18 @@ function ToastItem({
     >
       <Icon className={cn('size-5 shrink-0 mt-0.5', iconColorMap[type])} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
           {title}
         </p>
         {description && (
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-0.5">
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-0.5">
             {description}
           </p>
         )}
       </div>
       <button
         onClick={() => removeToast(id)}
-        className="shrink-0 p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+        className="shrink-0 p-0.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
         aria-label="Cerrar notificación"
       >
         <X className="size-4" />

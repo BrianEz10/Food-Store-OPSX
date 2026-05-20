@@ -18,7 +18,6 @@ export const CategoryFormModal: React.FC<Props> = ({ isOpen, onClose, categoria 
       nombre: '',
       descripcion: '',
       padre_id: null,
-      orden: 0,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -40,10 +39,9 @@ export const CategoryFormModal: React.FC<Props> = ({ isOpen, onClose, categoria 
         nombre: categoria.nombre,
         descripcion: categoria.descripcion || '',
         padre_id: categoria.padre_id ?? null,
-        orden: categoria.orden,
       });
     } else {
-      form.reset({ nombre: '', descripcion: '', padre_id: null, orden: 0 });
+      form.reset({ nombre: '', descripcion: '', padre_id: null });
     }
   }, [categoria, isOpen]);
 
@@ -85,7 +83,7 @@ export const CategoryFormModal: React.FC<Props> = ({ isOpen, onClose, categoria 
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   className={`mt-1 block w-full px-3 py-2 border rounded-input shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm ${
-                    field.state.meta.errors.length ? 'border-red-300' : 'border-outline/20'
+                    field.state.meta.errors.length ? 'border-error' : 'border-outline/20'
                   }`}
                 />
                 {field.state.meta.errors ? (
@@ -127,22 +125,6 @@ export const CategoryFormModal: React.FC<Props> = ({ isOpen, onClose, categoria 
                     </option>
                   ))}
                 </select>
-              </div>
-            )}
-          </form.Field>
-
-          <form.Field name="orden">
-            {(field) => (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Orden</label>
-                <input
-                  type="number"
-                  value={field.state.value as number}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(Number(e.target.value))}
-                  min={0}
-                  className="mt-1 block w-24 px-3 py-2 border border-outline/20 rounded-input shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-on-surface bg-white"
-                />
               </div>
             )}
           </form.Field>

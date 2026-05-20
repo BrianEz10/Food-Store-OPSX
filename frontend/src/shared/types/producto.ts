@@ -20,6 +20,7 @@ export interface ProductoListadoItem {
   stock_cantidad: number;
   disponible: boolean;
   creado_en: string;
+  categorias: ProductoCategoriaOut[];
 }
 
 export interface ProductoResponse {

@@ -23,7 +23,7 @@ function NavItemButton({ item, onClick }: { item: NavItem; onClick?: () => void 
           'flex flex-col items-center justify-center gap-0.5 py-1 px-2 rounded-md text-[10px] font-medium transition-colors min-w-0 flex-1',
           isActive
             ? 'text-primary'
-            : 'text-slate-500 dark:text-slate-400',
+            : 'text-gray-500 dark:text-gray-400',
         )
       }
     >
@@ -39,7 +39,7 @@ export function BottomNav({ open, onOpenChange }: BottomNavProps) {
   return (
     <>
       {/* Bottom navigation bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-container dark:bg-surface-900 border-t border-outline/20 dark:border-slate-700 safe-area-bottom">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-container dark:bg-gray-900 border-t border-outline/20 dark:border-gray-700 safe-area-bottom">
         <div className="flex items-center justify-around h-16 px-1">
           {bottomNavItems.map((item) => (
             <NavItemButton key={item.path} item={item} />
@@ -53,7 +53,7 @@ export function BottomNav({ open, onOpenChange }: BottomNavProps) {
                 'flex flex-col items-center justify-center gap-0.5 py-1 px-2 rounded-md text-[10px] font-medium transition-colors min-w-0 flex-1',
                 open
                   ? 'text-primary'
-                  : 'text-slate-500 dark:text-slate-400',
+                  : 'text-gray-500 dark:text-gray-400',
               )}
             >
               {open ? <X className="size-5" /> : <MoreHorizontal className="size-5" />}
@@ -73,7 +73,7 @@ export function BottomNav({ open, onOpenChange }: BottomNavProps) {
           />
 
           {/* Drawer */}
-          <div className="lg:hidden fixed bottom-16 left-0 right-0 z-50 bg-surface-container dark:bg-surface-900 rounded-t-xl border-t border-outline/20 dark:border-slate-700 shadow-xl animate-slide-up p-4">
+          <div className="lg:hidden fixed bottom-16 left-0 right-0 z-50 bg-surface-container dark:bg-gray-900 rounded-t-xl border-t border-outline/20 dark:border-gray-700 shadow-xl animate-slide-up p-4">
             <div className="grid grid-cols-4 gap-3">
               {moreItems.map((item) => {
                 const Icon = item.icon;
@@ -87,7 +87,7 @@ export function BottomNav({ open, onOpenChange }: BottomNavProps) {
                         'flex flex-col items-center gap-1 p-3 rounded-lg text-xs font-medium transition-colors',
                         isActive
                           ? 'bg-primary-light text-primary'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800',
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800',
                       )
                     }
                   >

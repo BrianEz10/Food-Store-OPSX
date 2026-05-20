@@ -32,13 +32,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-surface-900 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
           <div className="max-w-md text-center">
             <AlertTriangle className="size-16 mx-auto mb-4 text-yellow-500" />
-            <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-slate-100 mb-2">
+            <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-gray-100 mb-2">
               Algo salió mal
             </h1>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               Ocurrió un error inesperado. Recargá la página para continuar.
             </p>
             <button
@@ -50,7 +50,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </button>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-6 text-left">
-                <summary className="text-sm text-slate-500 cursor-pointer">
+                <summary className="text-sm text-gray-500 cursor-pointer">
                   Detalles del error (dev only)
                 </summary>
                 <pre className="mt-2 p-3 rounded bg-red-50 dark:bg-red-900/20 text-xs text-red-700 dark:text-red-300 overflow-auto max-h-40">

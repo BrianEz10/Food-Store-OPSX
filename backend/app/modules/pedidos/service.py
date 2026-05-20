@@ -202,7 +202,7 @@ class PedidosService:
                 )
 
             # Validar permisos
-            is_staff = any(r.rol_codigo in ["PEDIDOS", "ADMIN"] for r in current_user.usuarios_roles)
+            is_staff = any(r.rol_codigo in ["PEDIDOS", "ADMIN"] for r in current_user.usuario_roles)
             if not is_staff and pedido.usuario_id != current_user.id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -228,7 +228,7 @@ class PedidosService:
         """
         Lista pedidos. Clientes ven solo los suyos; gestores/admins pueden filtrar.
         """
-        is_staff = any(r.rol_codigo in ["PEDIDOS", "ADMIN"] for r in current_user.usuarios_roles)
+        is_staff = any(r.rol_codigo in ["PEDIDOS", "ADMIN"] for r in current_user.usuario_roles)
 
         async with UnitOfWork() as uow:
             if is_staff:
@@ -269,7 +269,7 @@ class PedidosService:
                     detail="Pedido no encontrado",
                 )
 
-            is_staff = any(r.rol_codigo in ["PEDIDOS", "ADMIN"] for r in current_user.usuarios_roles)
+            is_staff = any(r.rol_codigo in ["PEDIDOS", "ADMIN"] for r in current_user.usuario_roles)
             if not is_staff and pedido.usuario_id != current_user.id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,

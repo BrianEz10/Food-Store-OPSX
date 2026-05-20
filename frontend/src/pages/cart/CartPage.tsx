@@ -7,6 +7,7 @@ import {
   Minus,
 } from 'lucide-react';
 import { cn } from '@/shared/lib';
+import { getProductImage } from '@/shared/lib/product-images';
 import { useCartStore, useUIStore } from '@/shared/stores';
 
 export function CartPage() {
@@ -28,18 +29,18 @@ export function CartPage() {
   const handleClearCart = () => {
     clearCart();
     closeModal();
-    addToast({ type: 'success', message: 'Carrito vaciado' });
+    addToast({ type: 'success', title: 'Carrito vaciado' });
   };
 
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-2xl">
         <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-          <ShoppingCart className="size-16 text-slate-300 dark:text-slate-600" />
-          <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300">
+          <ShoppingCart className="size-16 text-gray-300 dark:text-gray-600" />
+          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
             Tu carrito está vacío
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Agregá productos desde nuestro catálogo
           </p>
           <Link
@@ -62,17 +63,17 @@ export function CartPage() {
       <div className="mb-6 flex items-center gap-3">
         <Link
           to="/catalogo"
-          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
           Carrito de Compras
         </h1>
       </div>
 
       {/* Items list */}
-      <div className="divide-y divide-slate-100 dark:divide-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-900">
+      <div className="divide-y divide-gray-100 dark:divide-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         {items.map((item) => {
           const subtotal = item.precio * item.cantidad;
           return (
@@ -81,37 +82,40 @@ export function CartPage() {
               className="flex items-start gap-4 p-4"
             >
               {/* Image */}
-              <div className="size-16 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                {item.imagenUrl ? (
-                  <img
-                    src={item.imagenUrl}
-                    alt={item.nombre}
-                    className="size-full object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center size-full text-slate-300 dark:text-slate-600">
-                    <ShoppingCart className="size-6" />
-                  </div>
-                )}
+              <div className="size-16 shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                {(() => {
+                  const src = item.imagenUrl || getProductImage(item.nombre);
+                  return src ? (
+                    <img
+                      src={src}
+                      alt={item.nombre}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center size-full text-gray-300 dark:text-gray-600">
+                      <ShoppingCart className="size-6" />
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-medium text-slate-800 dark:text-slate-100">
+                    <p className="font-medium text-gray-800 dark:text-gray-100">
                       {item.nombre}
                     </p>
-                    <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                    <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
                       ${item.precio.toFixed(2)}
                     </p>
                     {item.exclusiones.length > 0 && (
-                      <span className="inline-block mt-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                      <span className="inline-block mt-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
                         Personalizado
                       </span>
                     )}
                   </div>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 shrink-0">
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 shrink-0">
                     ${subtotal.toFixed(2)}
                   </p>
                 </div>
@@ -126,11 +130,11 @@ export function CartPage() {
                         item.exclusiones,
                       )
                     }
-                    className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
                     <Minus className="size-4" />
                   </button>
-                  <span className="w-8 text-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <span className="w-8 text-center text-sm font-medium text-gray-700 dark:text-gray-300">
                     {item.cantidad}
                   </span>
                   <button
@@ -141,7 +145,7 @@ export function CartPage() {
                         item.exclusiones,
                       )
                     }
-                    className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
                     <Plus className="size-4" />
                   </button>
@@ -149,7 +153,7 @@ export function CartPage() {
                     onClick={() =>
                       removeItem(item.productoId, item.exclusiones)
                     }
-                    className="ml-2 p-1.5 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="ml-2 p-1.5 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     title="Eliminar"
                   >
                     <Trash2 className="size-4" />
@@ -162,12 +166,12 @@ export function CartPage() {
       </div>
 
       {/* Summary */}
-      <div className="mt-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-900 p-4 space-y-4">
+      <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-base font-medium text-slate-700 dark:text-slate-300">
+          <span className="text-base font-medium text-gray-700 dark:text-gray-300">
             Total general
           </span>
-          <span className="text-xl font-bold text-slate-800 dark:text-slate-100">
+          <span className="text-xl font-bold text-gray-800 dark:text-gray-100">
             ${total.toFixed(2)}
           </span>
         </div>
@@ -202,17 +206,17 @@ export function CartPage() {
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={closeModal}
           />
-          <div className="relative bg-white dark:bg-surface-900 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+          <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
               Vaciar carrito
             </h3>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               ¿Estás seguro de vaciar el carrito?
             </p>
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
                 Cancelar
               </button>

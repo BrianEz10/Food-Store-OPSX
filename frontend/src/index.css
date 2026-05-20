@@ -9,47 +9,44 @@
   }
 
   .dark {
-    --background: #261819;
-    --foreground: #fff8f7;
+    --background: #3d2c2d;
+    --foreground: #ffeced;
   }
 
   body {
-    @apply bg-[var(--background)] text-[var(--foreground)] font-sans antialiased;
+    background-color: #fff8f7;
+    color: #261819;
+  }
+
+  .dark body {
+    background-color: #3d2c2d;
+    color: #ffeced;
   }
 }
 
 @layer utilities {
-  /* Safe area padding for mobile bottom nav */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* Animations for toast */
   @keyframes slide-in-right {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
 
   @keyframes slide-up {
-    from {
-      transform: translateY(100%);
-    }
-    to {
-      transform: translateY(0);
-    }
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
   }
 
-  .animate-slide-in-right {
-    animation: slide-in-right 0.3s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.3s ease-out;
-  }
+  .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+  .animate-slide-up { animation: slide-up 0.3s ease-out; }
 }

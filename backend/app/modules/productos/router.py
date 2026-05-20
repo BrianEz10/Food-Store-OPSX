@@ -10,6 +10,7 @@ from app.core.database import get_session
 from app.core.dependencies import get_current_user, require_role
 from app.modules.productos import service
 from app.modules.productos.schemas import (
+    ProductoCategoriaOut,
     ProductoCreate,
     ProductoDeleteResponse,
     ProductoListResponse,
@@ -44,8 +45,22 @@ async def list_productos(
         categoria_id=categoria_id,
         search=search,
     )
+    data: list[ProductoListadoItem] = []
+    for p in productos:
+        item = ProductoListadoItem.model_validate(p)
+        item.categorias = [
+            ProductoCategoriaOut(
+                id=pc.categoria.id,
+                nombre=pc.categoria.nombre,
+                es_principal=pc.es_principal,
+            )
+            for pc in p.producto_categorias
+            if pc.categoria and pc.categoria.eliminado_en is None
+        ]
+        data.append(item)
+
     return ProductoListResponse(
-        data=[ProductoListadoItem.model_validate(p) for p in productos],
+        data=data,
         total=total,
     )
 

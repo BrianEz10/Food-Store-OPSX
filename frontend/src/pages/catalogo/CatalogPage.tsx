@@ -80,7 +80,7 @@ export function CatalogPage() {
         <h1 className="text-2xl font-bold font-display text-on-surface">
           Catálogo
         </h1>
-        <p className="mt-1 text-sm text-on-surface/60 dark:text-slate-400">
+        <p className="mt-1 text-sm text-on-surface/60 dark:text-gray-400">
           Explorá nuestros productos
         </p>
       </div>
@@ -96,7 +96,7 @@ export function CatalogPage() {
 
       {/* Results count */}
       {!isLoading && !isError && (
-        <p className="text-sm text-on-surface/60 dark:text-slate-400">
+        <p className="text-sm text-on-surface/60 dark:text-gray-400">
           {total} producto{total !== 1 ? 's' : ''} encontrado{total !== 1 ? 's' : ''}
         </p>
       )}

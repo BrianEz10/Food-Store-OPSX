@@ -32,8 +32,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
         className={cn(
           'flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
           currentPage <= 1
-            ? 'text-outline/40 cursor-not-allowed dark:text-slate-600'
-            : 'text-on-surface/70 hover:bg-surface-container dark:text-slate-300 dark:hover:bg-slate-800',
+            ? 'text-outline/40 cursor-not-allowed dark:text-gray-600'
+            : 'text-on-surface/70 hover:bg-surface-container dark:text-gray-300 dark:hover:bg-gray-800',
         )}
       >
         <ChevronLeft className="size-4" />
@@ -49,7 +49,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
             'flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition-colors',
             page === currentPage
               ? 'bg-primary text-white shadow-sm'
-              : 'text-on-surface/70 hover:bg-surface-container dark:text-slate-300 dark:hover:bg-slate-800',
+: 'text-on-surface/70 hover:bg-surface-container dark:text-gray-300 dark:hover:bg-gray-800',
           )}
         >
           {page}
@@ -63,8 +63,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
         className={cn(
           'flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
           currentPage >= totalPages
-            ? 'text-outline/40 cursor-not-allowed dark:text-slate-600'
-            : 'text-on-surface/70 hover:bg-surface-container dark:text-slate-300 dark:hover:bg-slate-800',
+            ? 'text-outline/40 cursor-not-allowed dark:text-gray-600'
+            : 'text-on-surface/70 hover:bg-surface-container dark:text-gray-300 dark:hover:bg-gray-800',
         )}
       >
         <span className="hidden sm:inline">Siguiente</span>

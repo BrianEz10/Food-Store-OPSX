@@ -168,7 +168,11 @@ export const ProductListPage: React.FC = () => {
                   <tr key={p.id} className="hover:bg-surface-container/50 transition-colors">
                     <td className="px-4 py-3 text-sm font-bold text-on-surface font-display">{p.nombre}</td>
                     <td className="px-4 py-3 text-sm text-on-surface font-medium">${p.precio_base.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500">—</td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {p.categorias && p.categorias.length > 0
+                        ? p.categorias.map((c) => c.nombre).join(', ')
+                        : '—'}
+                    </td>
                     <td className="px-4 py-3 text-sm text-center">
                       {stockEditingId === p.id ? (
                         <span className="inline-flex items-center gap-1">

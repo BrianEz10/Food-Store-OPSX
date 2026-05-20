@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.base_repository import BaseRepository
 from app.modules.pedidos.model import DetallePedido, EstadoPedido, Pedido
+from app.modules.categorias.model import Categoria
 from app.modules.productos.model import Producto, ProductoCategoria, ProductoIngrediente
 
 
@@ -19,6 +20,32 @@ class ProductoRepository(BaseRepository[Producto]):
 
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, Producto)
+
+    def _list_options(self):
+        """Options para eager-load de categorías en listados."""
+        from sqlalchemy.orm import selectinload
+        return [
+            selectinload(Producto.producto_categorias).selectinload(
+                ProductoCategoria.categoria
+            ),
+        ]
+
+    async def list_all(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> list[Producto]:
+        """
+        Lista productos con categorías cargadas.
+        """
+        stmt = (
+            self._base_query()
+            .options(*self._list_options())
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
 
     async def search_by_name(
         self,
@@ -32,6 +59,7 @@ class ProductoRepository(BaseRepository[Producto]):
         """
         stmt = (
             self._base_query()
+            .options(*self._list_options())
             .where(Producto.nombre.ilike(f"%{search}%"))
             .order_by(Producto.nombre)
             .offset(skip)
@@ -64,6 +92,7 @@ class ProductoRepository(BaseRepository[Producto]):
         """
         stmt = (
             self._base_query()
+            .options(*self._list_options())
             .join(ProductoCategoria, Producto.id == ProductoCategoria.producto_id)
             .where(ProductoCategoria.categoria_id == categoria_id)
             .where(Producto.eliminado_en.is_(None))

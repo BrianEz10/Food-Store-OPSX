@@ -1,70 +1,89 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    colors: {
-      transparent: 'transparent',
-      current: 'currentColor',
-      black: '#000000',
-      white: '#ffffff',
-      
-      // Vivid Modernity Brand Colors
-      primary: {
-        DEFAULT: '#b3193d',
-        hover: '#961130',
-        light: '#ffe9e9',
-      },
-      secondary: {
-        DEFAULT: '#6d4e9f',
-        hover: '#5c3f8a',
-        light: '#f3e8ff',
-      },
-      tertiary: {
-        DEFAULT: '#006a42',
-        hover: '#005735',
-        light: '#e8f5e9',
-      },
-      surface: {
-        DEFAULT: '#fff8f7',
-        container: '#ffe9e9',
-        'container-high': '#fde2e2',
-      },
-      error: {
-        DEFAULT: '#ba1a1a',
-        light: '#ffebee',
-      },
-      'on-surface': '#261819',
-      outline: '#8e7071',
-
-      // Warm Gray scale mapping to outline/on-surface to maintain styling compatibility
-      gray: {
-        50: '#fcfaf9',
-        100: '#f8f4f3',
-        200: '#f1ebea',
-        300: '#e3d9d8',
-        400: '#c9b9b8',
-        500: '#a79594',
-        600: '#8e7071',
-        700: '#5b4a49',
-        800: '#3d2f30',
-        900: '#261819',
-      }
-    },
-    fontFamily: {
-      sans: ['Inter', 'system-ui', 'sans-serif'],
-      display: ['Outfit', 'system-ui', 'sans-serif'],
-    },
     extend: {
+      colors: {
+        // ═══════════════════════════════════════════
+        // Vivid Modernity — EXACTAMENTE como en Stitch
+        // ═══════════════════════════════════════════
+        surface: '#fff8f7',
+        'surface-dim': '#eed4d4',
+        'surface-bright': '#fff8f7',
+        'surface-container-lowest': '#ffffff',
+        'surface-container-low': '#fff0f0',
+        'surface-container': '#ffe9e9',
+        'surface-container-high': '#fde2e2',
+        'surface-container-highest': '#f7dcdd',
+        'surface-variant': '#f7dcdd',
+        'surface-tint': '#b71d3f',
+        background: '#fff8f7',
+        'on-background': '#261819',
+        'on-surface': '#261819',
+        'on-surface-variant': '#5a4042',
+        'inverse-surface': '#3d2c2d',
+        'inverse-on-surface': '#ffeced',
+        primary: '#b3193d',
+        'primary-container': '#d63653',
+        'on-primary': '#ffffff',
+        'on-primary-container': '#fffbff',
+        'primary-fixed': '#ffdadb',
+        'primary-fixed-dim': '#ffb2b7',
+        'on-primary-fixed': '#40000e',
+        'on-primary-fixed-variant': '#91002b',
+        'inverse-primary': '#ffb2b7',
+        secondary: '#6d4e9f',
+        'secondary-container': '#c8a6fe',
+        'on-secondary': '#ffffff',
+        'on-secondary-container': '#553685',
+        'secondary-fixed': '#ecdcff',
+        'secondary-fixed-dim': '#d6baff',
+        'on-secondary-fixed': '#280057',
+        'on-secondary-fixed-variant': '#553685',
+        tertiary: '#006a42',
+        'tertiary-container': '#008655',
+        'on-tertiary': '#ffffff',
+        'on-tertiary-container': '#f6fff6',
+        'tertiary-fixed': '#84f9ba',
+        'tertiary-fixed-dim': '#67dc9f',
+        'on-tertiary-fixed': '#002111',
+        'on-tertiary-fixed-variant': '#005232',
+        error: '#ba1a1a',
+        'error-container': '#ffdad6',
+        'on-error': '#ffffff',
+        'on-error-container': '#93000a',
+        outline: '#8e7071',
+        'outline-variant': '#e2bebf',
+
+        // Gray scale — para text-gray-* y bg-gray-* (compatibilidad)
+        gray: {
+          50: '#fff8f7',
+          100: '#fff0f0',
+          200: '#fde2e2',
+          300: '#f7dcdd',
+          400: '#e2bebf',
+          500: '#8e7071',
+          600: '#5a4042',
+          700: '#553685',
+          800: '#261819',
+          900: '#3d2c2d',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Outfit', 'system-ui', 'sans-serif'],
+      },
       borderRadius: {
-        'card': '8px',
-        'input': '8px',
-        'modal': '12px',
-        'chip': '9999px',
-      }
+        DEFAULT: '8px',
+        lg: '12px',
+        xl: '16px',
+        full: '9999px',
+      },
     },
   },
   plugins: [],
-}
+};

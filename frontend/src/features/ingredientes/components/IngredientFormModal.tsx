@@ -78,7 +78,7 @@ export const IngredientFormModal: React.FC<Props> = ({ isOpen, onClose, ingredie
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   className={`mt-1 block w-full px-3 py-2 border rounded-input shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-on-surface bg-white ${
-                    field.state.meta.errors.length ? 'border-red-300' : 'border-outline/20'
+                    field.state.meta.errors.length ? 'border-error' : 'border-outline/20'
                   }`}
                 />
                 {field.state.meta.errors ? (

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ImageOff, ShoppingCart } from 'lucide-react';
 import { cn } from '@/shared/lib';
+import { getProductImage } from '@/shared/lib/product-images';
 import { useCartStore, useUIStore } from '@/shared/stores';
 import type { ProductListItem } from '@/entities/product';
 
@@ -25,6 +26,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const esNuevo = isRecentlyCreated(creado_en);
   const hayStock = disponible && stock_cantidad > 0;
+  const imgSrc = getProductImage(nombre, imagen_url);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -34,10 +36,10 @@ export function ProductCard({ product }: ProductCardProps) {
       nombre,
       precio: precio_base,
       cantidad: 1,
-      imagenUrl: imagen_url || '',
+      imagenUrl: imgSrc || '',
       exclusiones: [],
     });
-    addToast({ type: 'success', message: 'Producto agregado al carrito' });
+    addToast({ type: 'success', title: 'Producto agregado al carrito' });
   };
 
   return (
@@ -46,19 +48,19 @@ export function ProductCard({ product }: ProductCardProps) {
       className={cn(
         'group flex flex-col rounded-card border border-outline/10 bg-white shadow-sm transition-all',
         'hover:shadow-md hover:border-primary/30',
-        'dark:border-slate-700 dark:bg-surface-800 dark:hover:border-primary/50',
+        'dark:border-gray-700 dark:bg-gray-800 dark:hover:border-primary/50',
       )}
     >
       {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden rounded-t-[8px] bg-surface-container dark:bg-slate-800">
-        {imagen_url ? (
+      <div className="relative aspect-[4/3] overflow-hidden rounded-t-[8px] bg-surface-container dark:bg-gray-800">
+        {imgSrc ? (
           <img
-            src={imagen_url}
+            src={imgSrc}
             alt={nombre}
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-outline/40 dark:text-slate-600">
+          <div className="flex h-full items-center justify-center text-outline/40 dark:text-gray-600">
             <ImageOff className="size-10" />
           </div>
         )}
@@ -97,12 +99,12 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Info */}
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="font-display font-semibold text-on-surface dark:text-slate-100 line-clamp-2">
+        <h3 className="font-display font-semibold text-on-surface dark:text-gray-100 line-clamp-2">
           {nombre}
         </h3>
 
         {descripcion && (
-          <p className="text-xs text-outline/60 dark:text-slate-400 line-clamp-2">
+          <p className="text-xs text-outline/60 dark:text-gray-400 line-clamp-2">
             {descripcion}
           </p>
         )}

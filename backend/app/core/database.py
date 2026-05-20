@@ -28,9 +28,16 @@ async_session_factory = sessionmaker(
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Dependencia de FastAPI que provee una sesión async."""
+    """Dependencia de FastAPI que provee una sesión async con commit automático."""
     async with async_session_factory() as session:
-        yield session
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
 
 async def init_db() -> None:

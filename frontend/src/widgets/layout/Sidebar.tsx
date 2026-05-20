@@ -20,10 +20,9 @@ function SidebarItem({ item, collapsed }: { item: NavItem; collapsed: boolean })
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-          'hover:bg-primary-light hover:text-primary',
           isActive
-            ? 'bg-primary text-white hover:bg-primary-hover hover:text-white dark:bg-primary'
-            : 'text-on-surface dark:text-slate-300',
+            ? 'bg-primary text-white shadow-sm dark:bg-primary'
+            : 'text-on-surface dark:text-gray-300 bg-surface-container-high/60 hover:bg-primary-light hover:text-primary dark:bg-gray-800/60 dark:hover:bg-gray-700',
         )
       }
       title={collapsed ? item.label : undefined}
@@ -40,7 +39,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'hidden lg:flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] bg-surface-container dark:bg-surface-900 border-r border-outline/20 dark:border-slate-700 transition-all duration-200 z-30',
+        'hidden lg:flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] bg-surface-container dark:bg-gray-900 border-r border-outline/20 dark:border-gray-700 transition-all duration-200 z-30',
         collapsed ? 'w-16' : 'w-60',
       )}
     >
@@ -52,10 +51,10 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
       </nav>
 
       {/* Collapse toggle */}
-      <div className="p-2 border-t border-outline/20 dark:border-slate-700">
+      <div className="p-2 border-t border-outline/20 dark:border-gray-700">
         <button
           onClick={onToggleCollapse}
-          className="flex items-center justify-center w-full p-2 rounded-lg text-on-surface hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="flex items-center justify-center w-full p-2 rounded-lg text-on-surface dark:text-gray-300 bg-surface-container-high/60 hover:bg-primary-light hover:text-primary dark:bg-gray-800/60 dark:hover:bg-gray-700 transition-colors"
           title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
         >
           {collapsed ? <ChevronRight className="size-5" /> : <ChevronLeft className="size-5" />}

@@ -1,10 +1,10 @@
 import React from 'react';
 
 const ROLE_COLORS: Record<string, string> = {
-  ADMIN: 'bg-red-100 text-red-800',
-  STOCK: 'bg-blue-100 text-blue-800',
-  PEDIDOS: 'bg-amber-100 text-amber-800',
-  CLIENT: 'bg-green-100 text-green-800',
+  ADMIN: 'bg-error-light text-error',
+  STOCK: 'bg-primary-light text-primary',
+  PEDIDOS: 'bg-gray-200 text-gray-700',
+  CLIENT: 'bg-tertiary-light text-tertiary',
 };
 
 interface RoleBadgesProps {

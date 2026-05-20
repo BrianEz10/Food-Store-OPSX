@@ -101,7 +101,7 @@ class ProductoResponse(BaseModel):
 
 
 class ProductoListadoItem(BaseModel):
-    """Versión ligera de producto para listados paginados (sin relaciones)."""
+    """Versión ligera de producto para listados paginados."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -113,6 +113,7 @@ class ProductoListadoItem(BaseModel):
     stock_cantidad: int
     disponible: bool
     creado_en: datetime
+    categorias: list[ProductoCategoriaOut] = Field(default_factory=list)
 
 
 class ProductoListResponse(BaseModel):
