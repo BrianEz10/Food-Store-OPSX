@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { HomePage } from '@/pages/home/HomePage';
@@ -26,6 +26,13 @@ import { PedidoDetailPage } from '@/pages/pedidos/PedidoDetailPage';
 import { AdminPedidosPage } from '@/pages/admin/pedidos/AdminPedidosPage';
 import { AdminUsuariosPage } from '@/pages/admin/usuarios/AdminUsuariosPage';
 import { AppLayout } from '@/widgets/layout';
+import { useAuthStore } from '@/shared/stores/auth-store';
+
+function RootRedirect() {
+  const user = useAuthStore((s) => s.user);
+  const isStaff = user?.roles?.some((r) => ['ADMIN', 'STOCK', 'PEDIDOS'].includes(r));
+  return isStaff ? <Navigate to="/dashboard" replace /> : <HomePage />;
+}
 
 export const AppRouter = () => {
   return (
@@ -36,8 +43,8 @@ export const AppRouter = () => {
 
       {/* ── Routes with AppLayout ── */}
       <Route element={<AppLayout />}>
-        {/* Public home */}
-        <Route path="/" element={<HomePage />} />
+        {/* Public home — redirect staff to dashboard */}
+        <Route path="/" element={<RootRedirect />} />
 
         {/* Public catalog */}
         <Route path="/catalogo" element={<CatalogPage />} />

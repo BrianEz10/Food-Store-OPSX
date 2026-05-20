@@ -36,6 +36,7 @@ async def lifespan(app: FastAPI):
     import app.modules.refreshtokens.model  # noqa: F401
     import app.modules.usuarios.model  # noqa: F401
     import app.modules.ingredientes.model  # noqa: F401
+    import app.modules.admin.models  # noqa: F401
 
     yield
     # Shutdown

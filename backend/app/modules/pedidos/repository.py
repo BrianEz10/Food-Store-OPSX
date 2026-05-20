@@ -130,21 +130,23 @@ class PedidoRepository(BaseRepository[Pedido]):
 
     async def get_ventas_por_mes(self) -> list[dict]:
         """Ventas agrupadas por mes (últimos 12 meses)."""
-        from sqlalchemy import func, select
+        from sqlalchemy import func, select, text
+
+        mes_expr = func.date_trunc("month", Pedido.creado_en)
 
         stmt = (
             select(
-                func.date_trunc("month", Pedido.creado_en).label("mes"),
+                mes_expr.label("mes"),
                 func.coalesce(func.sum(Pedido.total), 0).label("ventas"),
                 func.count(Pedido.id).label("cantidad_pedidos"),
             )
             .where(
                 Pedido.estado_codigo != "CANCELADO",
                 Pedido.eliminado_en.is_(None),
-                Pedido.creado_en >= func.now() - func.make_interval(months=12),
+                Pedido.creado_en >= func.now() - text("interval '12 months'"),
             )
-            .group_by(func.date_trunc("month", Pedido.creado_en))
-            .order_by(func.date_trunc("month", Pedido.creado_en))
+            .group_by(mes_expr)
+            .order_by(mes_expr)
         )
         result = await self.session.execute(stmt)
         rows = result.all()

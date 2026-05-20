@@ -37,3 +37,4 @@ async def init_db() -> None:
     """Crea las tablas (solo para desarrollo rápido, en producción usar Alembic)."""
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all)

@@ -24,8 +24,10 @@ import app.modules.productos.model  # noqa: F401, E402
 import app.modules.refreshtokens.model  # noqa: F401, E402
 import app.modules.usuarios.model  # noqa: F401, E402
 import app.modules.ingredientes.model  # noqa: F401, E402
+import app.modules.admin.models  # noqa: F401, E402
 
 from app.core.config import get_settings  # noqa: E402
+from app.core.database import Base  # noqa: E402
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -46,7 +48,7 @@ config.set_main_option("sqlalchemy.url", database_url)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-target_metadata = SQLModel.metadata
+target_metadata = [SQLModel.metadata, Base.metadata]
 
 
 def run_migrations_offline() -> None:
