@@ -10,17 +10,17 @@ interface DashboardKPIProps {
 
 export const DashboardKPI: React.FC<DashboardKPIProps> = ({ title, value, icon: Icon, subtitle }) => {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-5">
+    <div className="bg-white border border-outline/10 rounded-card p-5 hover:shadow-md hover:border-primary/30 transition-all">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          <p className="text-sm font-medium text-on-surface/60">{title}</p>
+          <p className="text-2xl font-bold text-on-surface mt-1">{value}</p>
           {subtitle && (
-            <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
+            <p className="text-xs text-on-surface/40 mt-1">{subtitle}</p>
           )}
         </div>
-        <div className="p-2 bg-blue-50 rounded-lg">
-          <Icon className="w-5 h-5 text-blue-600" />
+        <div className="p-2.5 bg-gradient-to-br from-primary to-secondary rounded-card text-white shadow-sm">
+          <Icon className="size-5" />
         </div>
       </div>
     </div>

@@ -5,7 +5,14 @@ import {
 import type { PedidosPorEstadoEntry } from '@/features/dashboard/types';
 import { STATUS_LABELS } from '@/shared/constants/pedidos';
 
-const COLORS = ['#9ca3af', '#3b82f6', '#f59e0b', '#f97316', '#22c55e', '#ef4444'];
+const STATE_COLORS: Record<string, string> = {
+  PENDIENTE: '#8e7071',
+  CONFIRMADO: '#b3193d',
+  EN_PREP: '#6d4e9f',
+  EN_CAMINO: '#e07c3c',
+  ENTREGADO: '#006a42',
+  CANCELADO: '#ba1a1a',
+};
 
 interface PedidosPorEstadoChartProps {
   data: PedidosPorEstadoEntry[];
@@ -18,10 +25,10 @@ export const PedidosPorEstadoChart: React.FC<PedidosPorEstadoChartProps> = ({ da
   }));
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-5">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">Pedidos por Estado</h3>
+    <div className="bg-white border border-outline/10 rounded-card p-5">
+      <h3 className="text-sm font-semibold text-on-surface mb-4">Pedidos por Estado</h3>
       {data.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-8">Sin datos de pedidos</p>
+        <p className="text-sm text-on-surface/40 text-center py-8">Sin datos de pedidos</p>
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <PieChart>
@@ -34,11 +41,17 @@ export const PedidosPorEstadoChart: React.FC<PedidosPorEstadoChartProps> = ({ da
               outerRadius={80}
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
             >
-              {chartData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              {chartData.map((entry) => (
+                <Cell key={entry.estado} fill={STATE_COLORS[entry.estado] || '#8e7071'} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip
+              contentStyle={{
+                borderRadius: '8px',
+                border: '1px solid rgba(142, 112, 113, 0.15)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+              }}
+            />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
