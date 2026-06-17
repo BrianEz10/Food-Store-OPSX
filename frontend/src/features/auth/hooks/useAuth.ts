@@ -15,6 +15,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const tokens = await authService.login(email, password)
+      storeLogin({ id: 0, email: '', nombre: '', apellido: '' }, tokens.access_token, 'cliente')
       const me = await authService.getMe()
       const rol = mapRole(me.roles)
       const user = { id: me.id, email: me.email, nombre: me.nombre, apellido: me.apellido, celular: me.celular }
@@ -29,6 +30,7 @@ export function useRegister() {
   return useMutation({
     mutationFn: async (input: authService.RegisterInput) => {
       const tokens = await authService.register(input)
+      storeLogin({ id: 0, email: '', nombre: '', apellido: '' }, tokens.access_token, 'cliente')
       const me = await authService.getMe()
       const rol = mapRole(me.roles)
       const user = { id: me.id, email: me.email, nombre: me.nombre, apellido: me.apellido, celular: me.celular }
