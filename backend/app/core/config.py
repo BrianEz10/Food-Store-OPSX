@@ -1,58 +1,28 @@
-"""
-Configuración centralizada del backend.
-Carga variables de entorno desde .env con validación de tipos.
-"""
-
-from functools import lru_cache
-from pathlib import Path
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-# Resolve .env relative to the backend/ directory (project root)
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-ENV_FILE = BASE_DIR / ".env"
 
 
 class Settings(BaseSettings):
-    """
-    Configuración de la aplicación.
-    Todas las variables requeridas deben estar en .env.
-    """
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
-    # Base de Datos
     DATABASE_URL: str
-
-    # JWT & Seguridad
     SECRET_KEY: str
-    ALGORITHM: str = "HS256"
+    ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:5174"]
 
-    # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:5173"]
-
-    # MercadoPago
     MP_ACCESS_TOKEN: str = ""
     MP_PUBLIC_KEY: str = ""
     MP_NOTIFICATION_URL: str = ""
 
-    # Admin Seed
-    ADMIN_EMAIL: str = "admin@foodstore.com"
-    ADMIN_PASSWORD: str = "admin123456"
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
 
-    # App
-    APP_NAME: str = "Food Store API"
-    APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    FRONTEND_URL: str = "http://localhost:5174"
 
-    model_config = SettingsConfigDict(
-        env_file=str(ENV_FILE),
-        env_file_encoding="utf-8",
-        case_sensitive=True,
-    )
-
-
-@lru_cache
-def get_settings() -> Settings:
-    """Singleton cacheado de la configuración."""
-    return Settings()
+settings = Settings()

@@ -1,47 +1,12 @@
-"""
-Conexión a la base de datos PostgreSQL con SQLModel + AsyncSession.
-"""
+from sqlmodel import create_engine, Session
+from typing import Annotated
+from fastapi import Depends
+from app.core.config import settings
 
-from collections.abc import AsyncGenerator
+engine = create_engine(settings.DATABASE_URL)
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlmodel import SQLModel
+def get_session():
+    with Session(engine) as session:
+        yield session
 
-Base = declarative_base()
-
-from app.core.config import get_settings
-
-settings = get_settings()
-
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-)
-
-async_session_factory = sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
-
-
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Dependencia de FastAPI que provee una sesión async con commit automático."""
-    async with async_session_factory() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
-
-
-async def init_db() -> None:
-    """Crea las tablas (solo para desarrollo rápido, en producción usar Alembic)."""
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-        await conn.run_sync(Base.metadata.create_all)
+SessionDep = Annotated[Session, Depends(get_session)]

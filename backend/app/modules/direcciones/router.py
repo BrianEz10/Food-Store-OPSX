@@ -1,99 +1,51 @@
+from typing import Annotated
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.database import get_session
-from app.core.dependencies import get_current_user
-from app.modules.direcciones import service
-from app.modules.direcciones.schemas import (
-    DireccionCreate,
-    DireccionResponse,
-    DireccionUpdate,
-)
-from app.modules.usuarios.model import Usuario
-
-router = APIRouter(prefix="/direcciones", tags=["direcciones"])
+from app.core.deps import SessionDep, CurrentUser, require_role
+from app.modules.direcciones.schemas import DireccionCreate, DireccionUpdate, DireccionOut
+from app.modules.direcciones.service import DireccionService
+from app.modules.usuarios.models import Usuario
 
 
-@router.get(
-    "",
-    response_model=list[DireccionResponse],
-    summary="Listar direcciones",
-)
-async def list_direcciones(
-    current_user: Usuario = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session),
-) -> list[DireccionResponse]:
-    """Retorna la lista de direcciones del usuario autenticado."""
-    return await service.list_direcciones(db, current_user.id)  # type: ignore
+router = APIRouter(tags=["Mis Direcciones"])
+
+def get_direccion_service(session: SessionDep) -> DireccionService:
+    return DireccionService(session)
 
 
-@router.post(
-    "",
-    response_model=DireccionResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Crear dirección",
-)
-async def create_direccion(
-    data: DireccionCreate,
-    current_user: Usuario = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session),
-) -> DireccionResponse:
-    """Crea una nueva dirección para el usuario autenticado."""
-    return await service.create_direccion(db, current_user.id, data)  # type: ignore
+@router.get("/admin/direcciones/{direccion_id}", response_model=DireccionOut)
+def admin_obtener_direccion(
+    direccion_id: int,
+    _admin: Annotated[Usuario, Depends(require_role(["ADMIN", "PEDIDOS"]))],
+    svc: DireccionService = Depends(get_direccion_service),
+) -> DireccionOut:
+    return svc.admin_get_by_id(direccion_id)
 
 
-@router.get(
-    "/{id}",
-    response_model=DireccionResponse,
-    summary="Obtener dirección",
-)
-async def get_direccion(
-    id: int,
-    current_user: Usuario = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session),
-) -> DireccionResponse:
-    """Obtiene una dirección por su ID, verificando que pertenezca al usuario."""
-    return await service.get_direccion(db, current_user.id, id)  # type: ignore
+@router.get("/mis-direcciones", response_model=list[DireccionOut])
+def listar_direcciones(current_user: CurrentUser, svc: DireccionService = Depends(get_direccion_service)) -> list[DireccionOut]:
+    return svc.get_mis_direcciones(current_user.id)
 
 
-@router.patch(
-    "/{id}",
-    response_model=DireccionResponse,
-    summary="Editar dirección",
-)
-async def update_direccion(
-    id: int,
-    data: DireccionUpdate,
-    current_user: Usuario = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session),
-) -> DireccionResponse:
-    """Actualiza una dirección existente."""
-    return await service.update_direccion(db, current_user.id, id, data)  # type: ignore
+@router.get("/mis-direcciones/{direccion_id}", response_model=DireccionOut)
+def obtener_direccion(direccion_id: int, current_user: CurrentUser, svc: DireccionService = Depends(get_direccion_service)) -> DireccionOut:
+    return svc.get_by_id(current_user.id, direccion_id)
 
 
-@router.delete(
-    "/{id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Eliminar dirección",
-)
-async def delete_direccion(
-    id: int,
-    current_user: Usuario = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session),
-) -> None:
-    """Realiza un borrado lógico de la dirección."""
-    await service.delete_direccion(db, current_user.id, id)  # type: ignore
+@router.post("/mis-direcciones", response_model=DireccionOut, status_code=status.HTTP_201_CREATED)
+def crear_direccion(data: DireccionCreate, current_user: CurrentUser, svc: DireccionService = Depends(get_direccion_service)) -> DireccionOut:
+    return svc.create(current_user.id, data)
 
 
-@router.post(
-    "/{id}/predeterminada",
-    response_model=DireccionResponse,
-    summary="Establecer como principal",
-)
-async def set_predeterminada(
-    id: int,
-    current_user: Usuario = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session),
-) -> DireccionResponse:
-    """Marca una dirección como principal y desmarca las demás."""
-    return await service.set_predeterminada(db, current_user.id, id)  # type: ignore
+@router.patch("/mis-direcciones/{direccion_id}", response_model=DireccionOut)
+def actualizar_direccion(direccion_id: int, data: DireccionUpdate, current_user: CurrentUser, svc: DireccionService = Depends(get_direccion_service)) -> DireccionOut:
+    return svc.update(current_user.id, direccion_id, data)
+
+
+@router.patch("/mis-direcciones/{direccion_id}/principal", response_model=DireccionOut)
+def marcar_principal(direccion_id: int, current_user: CurrentUser, svc: DireccionService = Depends(get_direccion_service)) -> DireccionOut:
+    return svc.marcar_principal(current_user.id, direccion_id)
+
+
+@router.delete("/mis-direcciones/{direccion_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_direccion(direccion_id: int, current_user: CurrentUser, svc: DireccionService = Depends(get_direccion_service)) -> None:
+    svc.delete(current_user.id, direccion_id)

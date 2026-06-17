@@ -1,104 +1,59 @@
-"""
-Servicio de Ingredientes con lógica de negocio.
-"""
-
-from datetime import datetime, timezone
-from typing import Optional
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.exceptions import ConflictError, NotFoundError
-from app.modules.ingredientes.model import Ingrediente
-from app.modules.ingredientes.repository import IngredienteRepository
-from app.modules.ingredientes.schemas import (
-    IngredienteCreate,
-    IngredienteUpdate,
-)
+from sqlmodel import Session
+from app.modules.ingredientes.models import Ingrediente
+from app.modules.ingredientes.schemas import IngredienteCreate, IngredienteUpdate, IngredienteOut
+from app.modules.ingredientes.uow import IngredienteUnitOfWork
+from app.core.errors import http_error
 
 
 class IngredienteService:
-    """Servicio para operaciones de ingrediente."""
+    def __init__(self, session: Session) -> None:
+        self._session = session
+    
 
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-        self.repo = IngredienteRepository(session)
-
-    async def list_all(self) -> tuple[list[Ingrediente], int]:
-        """Lista todos los ingredientes activos."""
-        ingredientes = await self.repo.get_all_active()
-
-        stmt_count = select(Ingrediente).where(Ingrediente.eliminado_en.is_(None))
-        result = await self.session.execute(stmt_count)
-        total = len(result.scalars().all())
-
-        return ingredientes, total
-
-    async def list_alergenos(self) -> list[Ingrediente]:
-        """Lista solo los alérgenos."""
-        return await self.repo.get_alergenos()
-
-    async def get_by_id(self, ingrediente_id: int) -> Optional[Ingrediente]:
-        """Obtiene un ingrediente por ID."""
-        return await self.repo.get_by_id(ingrediente_id)
-
-    async def create(self, data: IngredienteCreate) -> Ingrediente:
-        """Crea un nuevo ingrediente."""
-        ingrediente = Ingrediente(
-            nombre=data.nombre,
-            descripcion=data.descripcion,
-            es_alergeno=data.es_alergeno,
-        )
-        self.session.add(ingrediente)
-        await self.session.commit()
-        await self.session.refresh(ingrediente)
+    def _get_or_404(self, uow: IngredienteUnitOfWork, ingrediente_id: int) -> Ingrediente:
+        ingrediente = uow.ingredientes.get_by_id(ingrediente_id)
+        if not ingrediente:
+            raise http_error(404, f"Ingrediente con id {ingrediente_id} no encontrado", "NOT_FOUND", "ingrediente_id")
         return ingrediente
+    
 
-    async def update(
-        self, ingrediente_id: int, data: IngredienteUpdate
-    ) -> Ingrediente:
-        """Actualiza un ingrediente."""
-        ingrediente = await self.repo.get_by_id(ingrediente_id)
-        if not ingrediente or ingrediente.eliminado_en is not None:
-            raise NotFoundError("Ingrediente no encontrado")
+    def create(self, data: IngredienteCreate) -> IngredienteOut:
+        with IngredienteUnitOfWork(self._session) as uow:
+            existing = uow.ingredientes.get_by_nombre(data.nombre)
+            if existing:
+                raise http_error(409, "Ya existe un ingrediente con ese nombre", "ALREADY_EXISTS", "nombre")
+            ingrediente = Ingrediente.model_validate(data)
+            uow.ingredientes.add(ingrediente)
+            result = IngredienteOut.model_validate(ingrediente)
+        return result
+    
+    
+    def get_by_id(self, ingrediente_id: int) -> IngredienteOut:
+        with IngredienteUnitOfWork(self._session) as uow:
+            ingrediente = self._get_or_404(uow, ingrediente_id)
+            result = IngredienteOut.model_validate(ingrediente)
+        return result
+    
 
-        update_data = data.model_dump(exclude_unset=True)
-        for field, value in update_data.items():
-            setattr(ingrediente, field, value)
+    def get_all(self) -> list[IngredienteOut]:
+        with IngredienteUnitOfWork(self._session) as uow:
+            ingredientes = uow.ingredientes.get_all()
+            result = [IngredienteOut.model_validate(i) for i in ingredientes]
+        return result
+    
 
-        ingrediente.actualizado_en = datetime.now(timezone.utc)
-        await self.session.commit()
-        await self.session.refresh(ingrediente)
-        return ingrediente
+    def update(self, ingrediente_id: int, data: IngredienteUpdate) -> IngredienteOut:
+        with IngredienteUnitOfWork(self._session) as uow:
+            ingrediente = self._get_or_404(uow, ingrediente_id)
+            patch = data.model_dump(exclude_unset=True)
+            for field, value in patch.items():
+                setattr(ingrediente, field, value)
+            uow.ingredientes.add(ingrediente)
+            result = IngredienteOut.model_validate(ingrediente)
+        return result
+    
 
-    async def delete(self, ingrediente_id: int) -> Ingrediente:
-        """Elimina (soft delete) un ingrediente."""
-        ingrediente = await self.repo.get_by_id(ingrediente_id)
-        if not ingrediente or ingrediente.eliminado_en is not None:
-            raise NotFoundError("Ingrediente no encontrado")
-
-        # Verificar si hay productos asociados
-        from app.modules.productos.model import ProductoIngrediente
-
-        stmt_productos = (
-            select(ProductoIngrediente)
-            .join(Ingrediente, Ingrediente.id == ProductoIngrediente.ingrediente_id)
-            .where(
-                Ingrediente.id == ingrediente_id,
-                Ingrediente.eliminado_en.is_(None),
-            )
-        )
-        result = await self.session.execute(stmt_productos)
-        productos_asociados = result.scalars().all()
-
-        if productos_asociados:
-            raise ConflictError(
-                "No se puede eliminar el ingrediente porque hay productos asociados. "
-                "Desasocia los productos primero."
-            )
-
-        # Soft delete
-        ingrediente.eliminado_en = datetime.now(timezone.utc)
-        await self.session.commit()
-        await self.session.refresh(ingrediente)
-        return ingrediente
+    def delete(self, ingrediente_id: int) -> None:
+        with IngredienteUnitOfWork(self._session) as uow:
+            ingrediente = self._get_or_404(uow, ingrediente_id)
+            uow.ingredientes.soft_delete(ingrediente)

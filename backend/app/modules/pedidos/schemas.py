@@ -1,110 +1,71 @@
-"""
-Schemas para el dominio Pedidos.
-"""
-
+from sqlmodel import SQLModel, Field
 from datetime import datetime
-from typing import Optional
-
-from pydantic import BaseModel, Field, conint
+from app.modules.direcciones.schemas import DireccionOut
 
 
-class DetallePedidoCreate(BaseModel):
+class ItemPedidoRequest(SQLModel):
     producto_id: int
-    cantidad: conint(ge=1)  # type: ignore
-    ingredientes_excluidos: Optional[list[int]] = Field(default_factory=list)
+    cantidad: int = Field(ge=1)
+    personalizacion: list[int] | None = None
 
 
-class PedidoCreate(BaseModel):
-    direccion_id: int
-    notas: Optional[str] = None
-    items: list[DetallePedidoCreate] = Field(min_items=1)
+class PedidoCreate(SQLModel):
+    metodo_envio: str = "DOMICILIO"
+    direccion_id: int | None = None
+    forma_pago_codigo: str
+    nombre_para: str | None = None
+    notas: str | None = None
+    items: list[ItemPedidoRequest]
 
 
-class DetallePedidoResponse(BaseModel):
-    id: int
+class DetallePedidoOut(SQLModel):
+    pedido_id: int
     producto_id: int
+    cantidad: int
     nombre_snapshot: str
     precio_snapshot: float
-    cantidad: int
-    subtotal: float
-    personalizacion: Optional[list[int]] = None
-
-    class Config:
-        from_attributes = True
+    subtotal_snap: float
+    personalizacion: list[int] | None = None
+    personalizacion_nombres: list[str] | None = None
+    created_at: datetime
 
 
-class PedidoResponse(BaseModel):
-    id: int
-    usuario_id: int
-    estado_codigo: str
-    direccion_id: Optional[int]
-    total: float
-    costo_envio: float
-    notas: Optional[str]
-    creado_en: datetime
-    actualizado_en: datetime
-    detalles: list[DetallePedidoResponse] = []
-
-    class Config:
-        from_attributes = True
-
-
-class HistorialEstadoPedidoResponse(BaseModel):
-    id: int
+class HistorialOut(SQLModel):
     pedido_id: int
-    estado_desde: Optional[str]
-    estado_hasta: str
-    usuario_id: Optional[int]
-    motivo: Optional[str]
-    creado_en: datetime
-
-    class Config:
-        from_attributes = True
+    estado_desde: str | None = None
+    estado_hacia: str
+    usuario_id: int | None = None
+    motivo: str | None = None
+    created_at: datetime
 
 
-class PedidoListResponse(BaseModel):
-    data: list[PedidoResponse]
-    total: int
-    skip: int = 0
-    limit: int = 20
-
-
-class HistorialEntry(BaseModel):
-    id: int
-    estado_desde: Optional[str]
-    estado_hasta: str
-    usuario_id: Optional[int]
-    motivo: Optional[str]
-    creado_en: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class PagoEstadoInfo(BaseModel):
-    pago_id: int | None = None
-    pago_estado: str | None = None
-    mp_payment_id: int | None = None
-
-
-class PedidoDetailResponse(BaseModel):
+class PedidoOut(SQLModel):
     id: int
     usuario_id: int
+    direccion_id: int | None = None
     estado_codigo: str
-    direccion_id: Optional[int] = None
-    total: float
+    forma_pago_codigo: str
+    metodo_envio: str
+    nombre_para: str | None = None
+    subtotal: float
+    descuento: float
     costo_envio: float
-    notas: Optional[str] = None
-    creado_en: datetime
-    actualizado_en: datetime
-    detalles: list[DetallePedidoResponse] = []
-    historial: list[HistorialEntry] = []
-    pago: Optional[PagoEstadoInfo] = None
+    total: float
+    notas: str | None = None
+    created_at: datetime
+    direccion: DireccionOut | None = None
+    detalles: list[DetallePedidoOut] = []
+    historial: list[HistorialOut] = []
 
-    class Config:
-        from_attributes = True
+  
+class AvanceEstadoRequest(SQLModel):
+    estado_hacia: str
+    motivo: str | None = None
 
 
-class PedidoStatusUpdate(BaseModel):
-    nuevo_estado: str
-    motivo: Optional[str] = None
+class PaginatedPedidos(SQLModel):
+    items: list[PedidoOut]
+    total: int
+    page: int
+    size: int
+    pages: int

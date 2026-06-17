@@ -1,249 +1,237 @@
-"""
-Servicio de Productos con lógica de negocio.
-Sigue el patrón establecido por los módulos categorías e ingredientes.
-"""
-
-from datetime import datetime, timezone
-from typing import Optional
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-
-from app.core.exceptions import ConflictError, NotFoundError
-from app.modules.categorias.model import Categoria
-from app.modules.ingredientes.model import Ingrediente
-from app.modules.productos.model import Producto, ProductoCategoria, ProductoIngrediente
-from app.modules.productos.repository import ProductoRepository
-from app.modules.productos.schemas import (
-    ProductoCreate,
-    ProductoUpdate,
-)
+from sqlalchemy import func
+from sqlmodel import Session, select
+from app.modules.categorias.schemas import CategoriaOut
+from app.modules.ingredientes.schemas import IngredienteOut
+from app.modules.productos.models import Producto
+from app.modules.productos.schemas import IngredienteEnProductoOut, IngredienteEnProductoRequest, IngredientePersonalizadoOut, ProductoCreate, ProductoDetail, ProductoIngredienteRead, ProductoUpdate, ProductoOut, PaginatedProductos
+from app.modules.productos.uow import ProductoUnitOfWork
+from app.modules.productos.associations import ProductoCategoria, ProductoIngrediente
+from app.modules.categorias.models import Categoria
+from app.modules.ingredientes.models import Ingrediente
+from app.modules.unidad_medida.models import UnidadMedida
+from app.core.errors import http_error
 
 
 class ProductoService:
-    """Servicio para operaciones de producto."""
+    def __init__(self, session: Session) -> None:
+        self._session = session
+    
 
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-        self.repo = ProductoRepository(session)
-
-    # ── Operaciones de lectura ──────────────────────────────────────────
-
-    async def list_all(
-        self,
-        skip: int = 0,
-        limit: int = 100,
-        categoria_id: Optional[int] = None,
-        search: Optional[str] = None,
-    ) -> tuple[list[Producto], int]:
-        """
-        Lista productos activos con filtros opcionales.
-
-        Args:
-            skip: Registros a saltar (paginación)
-            limit: Máximo de registros a retornar
-            categoria_id: Filtrar por categoría (opcional)
-            search: Búsqueda por nombre ILIKE (opcional)
-
-        Returns:
-            tuple (lista de productos, total de registros)
-        """
-        if search:
-            return await self.repo.search_by_name(search, skip, limit)
-        if categoria_id is not None:
-            return await self.repo.list_by_categoria(categoria_id, skip, limit)
-
-        # Listado simple con paginación
-        productos = await self.repo.list_all(skip, limit)
-        total = await self.repo.count()
-        return productos, total
-
-    async def get_by_id(self, producto_id: int) -> Optional[Producto]:
-        """
-        Obtiene un producto por ID con todas sus relaciones cargadas
-        (categorías e ingredientes).
-        """
-        return await self.repo.get_with_relations(producto_id)
-
-    # ── Operaciones de escritura ─────────────────────────────────────────
-
-    async def create(self, data: ProductoCreate) -> Producto:
-        """
-        Crea un nuevo producto con sus relaciones M2M.
-
-        Valida que los IDs de categorías e ingredientes existan
-        antes de crear las asociaciones.
-        """
-        # Validar categorías
-        if data.categoria_ids:
-            await self._validate_categorias(data.categoria_ids)
-
-        # Validar ingredientes
-        if data.ingredientes:
-            await self._validate_ingredientes(
-                [i.ingrediente_id for i in data.ingredientes]
-            )
-
-        # Crear producto
-        producto = Producto(
-            nombre=data.nombre,
-            descripcion=data.descripcion,
-            imagen_url=data.imagen_url,
-            precio_base=data.precio_base,
-            stock_cantidad=data.stock_cantidad,
-            disponible=data.disponible,
-        )
-        self.session.add(producto)
-        await self.session.flush()  # Obtener ID
-
-        # Crear relaciones M2M
-        if data.categoria_ids:
-            for cat_id in data.categoria_ids:
-                self.session.add(
-                    ProductoCategoria(producto_id=producto.id, categoria_id=cat_id)
-                )
-
-        if data.ingredientes:
-            for ing in data.ingredientes:
-                self.session.add(
-                    ProductoIngrediente(
-                        producto_id=producto.id,
-                        ingrediente_id=ing.ingrediente_id,
-                        es_removible=ing.es_removible,
-                    )
-                )
-
-        await self.session.commit()
-        await self.session.refresh(producto)
-
-        # Recargar con relaciones para el response
-        return await self.repo.get_with_relations(producto.id)
-
-    async def update(self, producto_id: int, data: ProductoUpdate) -> Producto:
-        """
-        Actualiza un producto existente con reemplazo completo de relaciones M2M.
-
-        Si se envían categoria_ids o ingredientes, se reemplazan TODAS
-        las relaciones existentes por las nuevas listas.
-        Si no se envían, las relaciones existentes se mantienen intactas.
-        """
-        producto = await self.repo.get_by_id(producto_id)
+    def _get_or_404(self, uow: ProductoUnitOfWork, producto_id: int) -> Producto:
+        producto = uow.productos.get_by_id(producto_id)
         if not producto:
-            raise NotFoundError("Producto no encontrado")
-
-        # Aplicar cambios a campos escalares
-        update_data = data.model_dump(exclude_unset=True, exclude={"categoria_ids", "ingredientes"})
-        for field, value in update_data.items():
-            setattr(producto, field, value)
-
-        producto.actualizado_en = datetime.now(timezone.utc)
-
-        # Reemplazo de relaciones M2M (solo si se enviaron)
-        if data.categoria_ids is not None:
-            await self._validate_categorias(data.categoria_ids)
-            await self._replace_categorias(producto.id, data.categoria_ids)
-
-        if data.ingredientes is not None:
-            await self._validate_ingredientes(
-                [i.ingrediente_id for i in data.ingredientes]
-            )
-            await self._replace_ingredientes(producto.id, data.ingredientes)
-
-        await self.session.commit()
-        await self.session.refresh(producto)
-
-        return await self.repo.get_with_relations(producto.id)
-
-    async def delete(self, producto_id: int) -> Producto:
-        """
-        Soft delete de un producto.
-        Valida que no tenga pedidos activos asociados antes de eliminar.
-        """
-        producto = await self.repo.get_by_id(producto_id)
-        if not producto:
-            raise NotFoundError("Producto no encontrado")
-
-        # Validar pedidos activos
-        if await self.repo.has_active_orders(producto_id):
-            raise ConflictError(
-                "No se puede eliminar el producto porque tiene pedidos activos asociados"
-            )
-
-        # Soft delete
-        producto.eliminado_en = datetime.now(timezone.utc)
-        await self.session.commit()
-        await self.session.refresh(producto)
+            raise http_error(404, "Producto no encontrado", "NOT_FOUND", "producto_id")
         return producto
+    
 
-    # ── Métodos auxiliares ─────────────────────────────────────────────
-
-    async def _validate_categorias(self, categoria_ids: list[int]) -> None:
-        """Valida que todos los IDs de categoría existan y estén activos."""
-        stmt = select(Categoria).where(
-            Categoria.id.in_(categoria_ids),
-            Categoria.eliminado_en.is_(None),
-        )
-        result = await self.session.execute(stmt)
-        existentes = {c.id for c in result.scalars().all()}
-        faltantes = set(categoria_ids) - existentes
-        if faltantes:
-            raise NotFoundError(
-                f"Categorías no encontradas: {sorted(faltantes)}"
-            )
-
-    async def _validate_ingredientes(self, ingrediente_ids: list[int]) -> None:
-        """Valida que todos los IDs de ingrediente existan y estén activos."""
-        stmt = select(Ingrediente).where(
-            Ingrediente.id.in_(ingrediente_ids),
-            Ingrediente.eliminado_en.is_(None),
-        )
-        result = await self.session.execute(stmt)
-        existentes = {i.id for i in result.scalars().all()}
-        faltantes = set(ingrediente_ids) - existentes
-        if faltantes:
-            raise NotFoundError(
-                f"Ingredientes no encontrados: {sorted(faltantes)}"
-            )
-
-    async def _replace_categorias(
-        self, producto_id: int, categoria_ids: list[int]
-    ) -> None:
-        """Reemplaza todas las categorías de un producto."""
-        # Eliminar relaciones existentes
-        stmt_delete = select(ProductoCategoria).where(
-            ProductoCategoria.producto_id == producto_id
-        )
-        result = await self.session.execute(stmt_delete)
-        for pc in result.scalars().all():
-            await self.session.delete(pc)
-
-        # Insertar nuevas relaciones
-        for cat_id in categoria_ids:
-            self.session.add(
-                ProductoCategoria(producto_id=producto_id, categoria_id=cat_id)
-            )
-
-    async def _replace_ingredientes(
-        self,
-        producto_id: int,
-        ingredientes: list,
-    ) -> None:
-        """Reemplaza todos los ingredientes de un producto."""
-        # Eliminar relaciones existentes
-        stmt_delete = select(ProductoIngrediente).where(
-            ProductoIngrediente.producto_id == producto_id
-        )
-        result = await self.session.execute(stmt_delete)
-        for pi in result.scalars().all():
-            await self.session.delete(pi)
-
-        # Insertar nuevas relaciones
-        for ing in ingredientes:
-            self.session.add(
-                ProductoIngrediente(
-                    producto_id=producto_id,
-                    ingrediente_id=ing.ingrediente_id,
-                    es_removible=ing.es_removible,
+    def create(self, data: ProductoCreate) -> ProductoOut:
+        with ProductoUnitOfWork(self._session) as uow:
+            producto = Producto(**data.model_dump(exclude={"categorias", "ingredientes"}))
+            uow.productos.add(producto)
+            if data.unidad_venta_id is not None:
+                um = uow.productos.session.get(UnidadMedida, data.unidad_venta_id)
+                if not um:
+                    raise http_error(400, "Unidad de medida no encontrada", "NOT_FOUND", "unidad_venta_id")
+            principales = [c for c in data.categorias if c.es_principal]
+            if len(principales) > 1:
+                raise http_error(400, "Solo puede haber una categoría principal por producto", "BAD_REQUEST", "categorias")
+            for cat_data in data.categorias:
+                cat = uow.productos.session.get(Categoria, cat_data.categoria_id)
+                if not cat:
+                    raise http_error(404, "Categoria no encontrada", "NOT_FOUND", "categoria_id")
+                link = ProductoCategoria(
+                    producto_id=producto.id,
+                    categoria_id=cat_data.categoria_id,
+                    es_principal=cat_data.es_principal,
                 )
+                uow.productos.session.add(link)
+            for ing_data in data.ingredientes:
+                ing = uow.productos.session.get(Ingrediente, ing_data.ingrediente_id)
+                if not ing:
+                    raise http_error(404, "Ingrediente no encontrado", "NOT_FOUND", "ingrediente_id")
+                if ing_data.cantidad <= 0:
+                    raise http_error(400, "La cantidad debe ser mayor a 0", "BAD_REQUEST", "cantidad")
+                link = ProductoIngrediente(
+                    producto_id=producto.id,
+                    ingrediente_id=ing_data.ingrediente_id,
+                    cantidad=ing_data.cantidad,
+                    unidad_medida_id=ing_data.unidad_medida_id,
+                    es_removible=ing_data.es_removible,
+                )
+                uow.productos.session.add(link)
+            result = ProductoOut.model_validate(producto)
+        return result
+    
+
+    def get_all(self, categoria_id: int | None = None, disponible: bool | None = None,
+                buscar: str | None = None, page: int = 1, size: int = 20) -> PaginatedProductos:
+        with ProductoUnitOfWork(self._session) as uow:
+            stmt = select(Producto).where(Producto.deleted_at == None)
+            if categoria_id is not None:
+                stmt = stmt.join(ProductoCategoria).where(
+                    ProductoCategoria.categoria_id == categoria_id
+                ).distinct()
+            if disponible is not None:
+                stmt = stmt.where(Producto.disponible == disponible)
+            if buscar:
+                stmt = stmt.where(Producto.nombre.ilike(f"%{buscar}%"))
+
+            total = uow.productos.session.exec(
+                select(func.count()).select_from(stmt.subquery())
+            ).one()
+
+            stmt = stmt.offset((page - 1) * size).limit(size).order_by(Producto.id)
+            productos_db = uow.productos.session.exec(stmt).all()
+            from app.modules.categorias.schemas import CategoriaOut
+            from app.modules.productos.associations import ProductoCategoria
+            from app.modules.categorias.models import Categoria
+            result = []
+            for p in productos_db:
+                out = ProductoOut.model_validate(p)
+                pc_stmt = select(Categoria).join(ProductoCategoria).where(ProductoCategoria.producto_id == p.id)
+                cat_result = uow.productos.session.exec(pc_stmt).all()
+                out.categorias = [CategoriaOut.model_validate(c) for c in cat_result]
+                result.append(out)
+            pages = (total + size - 1) // size
+
+        return PaginatedProductos(items=result, total=total, page=page, size=size, pages=pages)
+
+
+    def get_by_id(self, producto_id: int) -> ProductoDetail:
+        with ProductoUnitOfWork(self._session) as uow:
+            producto = self._get_or_404(uow, producto_id)
+            result = ProductoDetail.model_validate(producto)
+            
+            ingredientes = []
+            for pi in producto.producto_ingredientes:
+                ing = IngredienteEnProductoOut(
+                    id=pi.ingrediente.id,
+                    nombre=pi.ingrediente.nombre,
+                    descripcion=pi.ingrediente.descripcion,
+                    es_alergeno=pi.ingrediente.es_alergeno,
+                    es_removible=pi.es_removible,
+                )
+                ingredientes.append(ing)
+            
+            result.ingredientes = ingredientes
+        return result
+    
+    def get_ingredientes(self, producto_id: int) -> list[IngredientePersonalizadoOut]:
+        with ProductoUnitOfWork(self._session) as uow:
+            self._get_or_404(uow, producto_id)
+            stmt = (
+                select(Ingrediente, ProductoIngrediente.es_removible)
+                .join(ProductoIngrediente, Ingrediente.id == ProductoIngrediente.ingrediente_id)
+                .where(ProductoIngrediente.producto_id == producto_id)
             )
+            rows = uow.productos.session.exec(stmt).all()
+            result = [
+                IngredientePersonalizadoOut(
+                    id=ing.id,
+                    nombre=ing.nombre,
+                    es_alergeno=ing.es_alergeno,
+                    es_removible=es_removible,
+                )
+                for ing, es_removible in rows
+            ]
+        return result
+
+
+    def agregar_ingrediente(self, producto_id: int, data: IngredienteEnProductoRequest) -> ProductoIngredienteRead:
+        with ProductoUnitOfWork(self._session) as uow:
+            self._get_or_404(uow, producto_id)
+            ing = uow.productos.session.get(Ingrediente, data.ingrediente_id)
+            if not ing:
+                raise http_error(404, "Ingrediente no encontrado", "NOT_FOUND", "ingrediente_id")
+            if data.cantidad <= 0:
+                raise http_error(400, "La cantidad debe ser mayor a 0", "BAD_REQUEST", "cantidad")
+            link = ProductoIngrediente(
+                producto_id=producto_id,
+                ingrediente_id=data.ingrediente_id,
+                cantidad=data.cantidad,
+                unidad_medida_id=data.unidad_medida_id,
+                es_removible=data.es_removible,
+            )
+            uow.productos.session.add(link)
+            result = ProductoIngredienteRead(
+                producto_id=producto_id,
+                ingrediente_id=data.ingrediente_id,
+                cantidad=data.cantidad,
+                unidad_medida_id=data.unidad_medida_id,
+                es_removible=data.es_removible,
+            )
+        return result
+
+
+    def update(self, producto_id: int, data: ProductoUpdate) -> ProductoOut:
+        with ProductoUnitOfWork(self._session) as uow:
+            producto = self._get_or_404(uow, producto_id)
+            update_data = data.model_dump(exclude_unset=True, exclude={"categorias", "ingredientes"})
+            for field, value in update_data.items():
+                setattr(producto, field, value)
+            if data.categorias is not None:
+                principales = [c for c in data.categorias if c.es_principal]
+                if len(principales) > 1:
+                    raise http_error(400, "Solo puede haber una categoría principal por producto", "BAD_REQUEST", "categorias")
+                old_cat_links = uow.productos.session.exec(
+                    select(ProductoCategoria).where(ProductoCategoria.producto_id == producto_id)
+                ).all()
+                for link in old_cat_links:
+                    uow.productos.session.delete(link)
+
+                for cat_data in data.categorias:
+                    cat = uow.productos.session.get(Categoria, cat_data.categoria_id)
+                    if not cat:
+                        raise http_error(404, "Categoria no encontrada", "NOT_FOUND", "categoria_id")
+                    link = ProductoCategoria(
+                        producto_id=producto.id,
+                        categoria_id=cat_data.categoria_id,
+                        es_principal=cat_data.es_principal,
+                    )
+                    uow.productos.session.add(link)
+
+            if data.ingredientes is not None:
+                old_ing_links = uow.productos.session.exec(
+                    select(ProductoIngrediente).where(ProductoIngrediente.producto_id == producto_id)
+                ).all()
+                for link in old_ing_links:
+                    uow.productos.session.delete(link)
+                for ing_data in data.ingredientes:
+                    ing = uow.productos.session.get(Ingrediente, ing_data.ingrediente_id)
+                    if not ing:
+                        raise http_error(404, f"Ingrediente {ing_data.ingrediente_id} no encontrado", "NOT_FOUND", "ingrediente_id")
+                    if ing_data.cantidad <= 0:
+                        raise http_error(400, "La cantidad debe ser mayor a 0", "BAD_REQUEST", "cantidad")
+                    link = ProductoIngrediente(
+                        producto_id=producto_id,
+                        ingrediente_id=ing_data.ingrediente_id,
+                        cantidad=ing_data.cantidad,
+                        unidad_medida_id=ing_data.unidad_medida_id,
+                        es_removible=ing_data.es_removible,
+                    )
+                    uow.productos.session.add(link)
+            uow.productos.add(producto)
+            result = ProductoOut.model_validate(producto)
+        return result
+    
+
+    def update_imagenes(self, producto_id: int, imagenes_url: list[str]) -> ProductoOut:
+        with ProductoUnitOfWork(self._session) as uow:
+            producto = self._get_or_404(uow, producto_id)
+            producto.imagenes_url = imagenes_url
+            result = ProductoOut.model_validate(producto)
+        return result
+    
+
+    def toggle_disponibilidad(self, producto_id: int, disponible: bool) -> ProductoOut:
+        with ProductoUnitOfWork(self._session) as uow:
+            producto = self._get_or_404(uow, producto_id)
+            producto.disponible = disponible
+            result = ProductoOut.model_validate(producto)
+        return result
+    
+    
+    def delete(self, producto_id: int) -> None:
+        with ProductoUnitOfWork(self._session) as uow:
+            producto = self._get_or_404(uow, producto_id)
+            uow.productos.soft_delete(producto)

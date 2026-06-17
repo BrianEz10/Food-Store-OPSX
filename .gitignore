@@ -39,6 +39,7 @@ alembic/__pycache__/
 # ── Misc ────────────────────────────────────────
 *.log
 *.sqlite3
-
+vistas/ 
 # ── Agent Skills (local) ─────────────────────────
 skills-lock.json
+vistas/

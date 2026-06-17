@@ -1,184 +1,61 @@
-"""
-Router de Productos.
-Endpoints públicos de consulta y protegidos (STOCK/ADMIN) para mutación.
-"""
-
+from typing import Annotated
 from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.database import get_session
-from app.core.dependencies import get_current_user, require_role
-from app.modules.productos import service
-from app.modules.productos.schemas import (
-    ProductoCategoriaOut,
-    ProductoCreate,
-    ProductoDeleteResponse,
-    ProductoListResponse,
-    ProductoListadoItem,
-    ProductoResponse,
-    ProductoUpdate,
-)
-from app.modules.usuarios.model import Usuario
-
-router = APIRouter(tags=["productos"])
+from app.core.database import SessionDep
+from app.core.deps import require_role
+from app.modules.usuarios.models import Usuario
+from app.modules.productos.schemas import DisponibilidadRequest, IngredienteEnProductoRequest, ProductoCreate, ProductoDetail, ProductoIngredienteRead, ProductoUpdate, ProductoOut, PaginatedProductos
+from app.modules.productos.schemas import IngredientePersonalizadoOut
+from app.modules.productos.service import ProductoService
+from app.modules.uploads.schemas import ImagenProductoUpdate
 
 
-# ── Endpoints públicos ──────────────────────────────────────────────────
+router = APIRouter(prefix="/productos", tags=["productos"])
 
 
-@router.get(
-    "",
-    response_model=ProductoListResponse,
-    summary="Listar productos del catálogo",
-)
-async def list_productos(
-    skip: int = Query(default=0, ge=0, description="Registros a saltar"),
-    limit: int = Query(default=100, ge=1, le=500, description="Máximo de registros"),
-    categoria_id: int | None = Query(default=None, description="Filtrar por categoría"),
-    search: str | None = Query(default=None, min_length=1, max_length=100, description="Búsqueda por nombre"),
-    db: AsyncSession = Depends(get_session),
-) -> ProductoListResponse:
-    """Lista productos activos con paginación y filtros opcionales (público)."""
-    productos, total = await service.ProductoService(db).list_all(
-        skip=skip,
-        limit=limit,
-        categoria_id=categoria_id,
-        search=search,
-    )
-    data: list[ProductoListadoItem] = []
-    for p in productos:
-        item = ProductoListadoItem.model_validate(p)
-        item.categorias = [
-            ProductoCategoriaOut(
-                id=pc.categoria.id,
-                nombre=pc.categoria.nombre,
-                es_principal=pc.es_principal,
-            )
-            for pc in p.producto_categorias
-            if pc.categoria and pc.categoria.eliminado_en is None
-        ]
-        data.append(item)
-
-    return ProductoListResponse(
-        data=data,
-        total=total,
-    )
+def get_producto_service(session: SessionDep) -> ProductoService:
+    return ProductoService(session)
 
 
-@router.get(
-    "/{producto_id}",
-    response_model=ProductoResponse,
-    summary="Obtener un producto por ID",
-)
-async def get_producto(
-    producto_id: int,
-    db: AsyncSession = Depends(get_session),
-) -> ProductoResponse:
-    """Obtiene un producto específico con sus relaciones (público)."""
-    svc = service.ProductoService(db)
-    producto = await svc.get_by_id(producto_id)
-    if not producto:
-        from app.core.exceptions import NotFoundError
-
-        raise NotFoundError("Producto no encontrado")
-
-    # Mapear response con relaciones
-    return _map_producto_response(producto)
+@router.get("/", response_model=PaginatedProductos)
+def listar(categoria_id: int | None = Query(default=None), disponible: bool | None = Query(default=None), buscar: str | None = Query(default=None), page: int = Query(default=1, ge=1), size: int = Query(default=20, ge=1, le=100), svc: ProductoService = Depends(get_producto_service)) -> PaginatedProductos:
+    return svc.get_all(categoria_id, disponible, buscar, page, size)
 
 
-# ── Endpoints protegidos (STOCK, ADMIN) ────────────────────────────────
+@router.get("/{id}", response_model=ProductoDetail)
+def obtener(id: int, svc: ProductoService = Depends(get_producto_service)) -> ProductoOut:
+    return svc.get_by_id(id)
 
 
-@router.post(
-    "",
-    response_model=ProductoResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Crear un producto",
-    dependencies=[Depends(require_role(["STOCK", "ADMIN"]))],
-)
-async def create_producto(
-    data: ProductoCreate,
-    current_user: Usuario = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session),
-) -> ProductoResponse:
-    """Crea un nuevo producto con categorías e ingredientes. Requiere rol STOCK o ADMIN."""
-    svc = service.ProductoService(db)
-    producto = await svc.create(data)
-    return _map_producto_response(producto)
+@router.get("/{id}/ingredientes", response_model=list[IngredientePersonalizadoOut])
+def listar_ingredientes(id: int, svc: ProductoService = Depends(get_producto_service)) -> list[IngredientePersonalizadoOut]:
+    return svc.get_ingredientes(id)
 
 
-@router.put(
-    "/{producto_id}",
-    response_model=ProductoResponse,
-    summary="Actualizar un producto",
-    dependencies=[Depends(require_role(["STOCK", "ADMIN"]))],
-)
-async def update_producto(
-    producto_id: int,
-    data: ProductoUpdate,
-    current_user: Usuario = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session),
-) -> ProductoResponse:
-    """Actualiza un producto existente (reemplazo completo de relaciones). Requiere rol STOCK o ADMIN."""
-    svc = service.ProductoService(db)
-    producto = await svc.update(producto_id, data)
-    return _map_producto_response(producto)
+@router.post("/", response_model=ProductoOut, status_code=status.HTTP_201_CREATED)
+def crear(_admin: Annotated[Usuario, Depends(require_role(["ADMIN"]))], data: ProductoCreate, svc: ProductoService = Depends(get_producto_service)) -> ProductoOut:
+    return svc.create(data)
 
 
-@router.delete(
-    "/{producto_id}",
-    response_model=ProductoDeleteResponse,
-    summary="Eliminar un producto",
-    dependencies=[Depends(require_role(["STOCK", "ADMIN"]))],
-)
-async def delete_producto(
-    producto_id: int,
-    current_user: Usuario = Depends(get_current_user),
-    db: AsyncSession = Depends(get_session),
-) -> ProductoDeleteResponse:
-    """Elimina (soft delete) un producto. Valida que no tenga pedidos activos. Requiere rol STOCK o ADMIN."""
-    producto = await service.ProductoService(db).delete(producto_id)
-    return ProductoDeleteResponse(
-        id=producto.id,
-        eliminado_en=producto.eliminado_en,
-    )
+@router.post("/{id}/ingredientes", response_model=ProductoIngredienteRead, status_code=status.HTTP_201_CREATED)
+def agregar_ingrediente(id: int, data: IngredienteEnProductoRequest, _admin: Annotated[Usuario, Depends(require_role(["ADMIN"]))], svc: ProductoService = Depends(get_producto_service)) -> ProductoIngredienteRead:
+    return svc.agregar_ingrediente(id, data)
 
 
-# ── Helpers ─────────────────────────────────────────────────────────────
+@router.put("/{id}", response_model=ProductoOut)
+def actualizar(id: int, _admin: Annotated[Usuario, Depends(require_role(["ADMIN","STOCK"]))], data: ProductoUpdate, svc: ProductoService = Depends(get_producto_service)) -> ProductoOut:
+    return svc.update(id, data)
 
 
-def _map_producto_response(producto) -> ProductoResponse:
-    """
-    Mapea un producto ORM a ProductoResponse con relaciones anidadas.
-    Convierte las tablas pivote en listas planas de categorías e ingredientes.
-    """
-    from app.modules.productos.schemas import (
-        ProductoCategoriaOut,
-        ProductoIngredienteOut,
-    )
+@router.patch("/{id}/disponibilidad", response_model=ProductoOut)
+def toggle_disponibilidad(id: int, data: DisponibilidadRequest, _admin_stock: Annotated[Usuario, Depends(require_role(["ADMIN", "STOCK"]))], svc: ProductoService = Depends(get_producto_service)) -> ProductoOut:
+    return svc.toggle_disponibilidad(id, data.disponible)
 
-    categorias = [
-        ProductoCategoriaOut(
-            id=pc.categoria.id,
-            nombre=pc.categoria.nombre,
-            es_principal=pc.es_principal,
-        )
-        for pc in producto.producto_categorias
-        if pc.categoria and pc.categoria.eliminado_en is None
-    ]
 
-    ingredientes = [
-        ProductoIngredienteOut(
-            id=pi.ingrediente.id,
-            nombre=pi.ingrediente.nombre,
-            es_alergeno=pi.ingrediente.es_alergeno,
-            es_removible=pi.es_removible,
-        )
-        for pi in producto.producto_ingredientes
-        if pi.ingrediente and pi.ingrediente.eliminado_en is None
-    ]
+@router.patch("/{id}/imagenes", response_model=ProductoOut)
+def actualizar_imagenes(id: int, data: ImagenProductoUpdate, _admin: Annotated[Usuario, Depends(require_role(["ADMIN"]))], svc: ProductoService = Depends(get_producto_service)) -> ProductoOut:
+    return svc.update_imagenes(id, data.imagenes_url)
 
-    response = ProductoResponse.model_validate(producto)
-    response.categorias = categorias
-    response.ingredientes = ingredientes
-    return response
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar(id: int, _admin: Annotated[Usuario, Depends(require_role(["ADMIN"]))], svc: ProductoService = Depends(get_producto_service)) -> None:
+    svc.delete(id)

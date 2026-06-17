@@ -1,43 +1,42 @@
-"""Repositorio de Pago con métodos de dominio."""
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.base_repository import BaseRepository
-from app.modules.pagos.model import Pago
+from typing import Optional, List
+from sqlmodel import Session, select
+from app.core.repository import BaseRepository
+from app.modules.pagos.models import Pago
 
 
 class PagoRepository(BaseRepository[Pago]):
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: Session) -> None:
         super().__init__(session, Pago)
 
-    async def get_by_pedido_id(self, pedido_id: int) -> Pago | None:
-        """Retorna el pago más reciente de un pedido."""
-        result = await self.session.execute(
-            select(Pago)
-            .where(Pago.pedido_id == pedido_id)
-            .order_by(Pago.creado_en.desc())
-            .limit(1)
-        )
-        return result.scalar_one_or_none()
 
-    async def get_by_mp_payment_id(self, mp_payment_id: int) -> Pago | None:
-        """Busca un pago por el ID de MercadoPago (idempotencia)."""
-        result = await self.session.execute(
+    def get_by_pedido(self, pedido_id: int) -> List[Pago]:
+        return list(
+            self.session.exec(
+                select(Pago)
+                .where(Pago.pedido_id == pedido_id)
+                .order_by(Pago.created_at.desc())
+            ).all()
+        )
+    
+
+    def get_ultimo_by_pedido(self, pedido_id: int) -> Optional[Pago]:
+        pagos = self.get_by_pedido(pedido_id)
+        return pagos[0] if pagos else None
+    
+
+    def get_by_idempotency_key(self, key: str) -> Optional[Pago]:
+        return self.session.exec(
+            select(Pago).where(Pago.idempotency_key == key)
+        ).first()
+    
+
+    def get_by_mp_payment_id(self, mp_payment_id: int) -> Optional[Pago]:
+        return self.session.exec(
             select(Pago).where(Pago.mp_payment_id == mp_payment_id)
-        )
-        return result.scalar_one_or_none()
+        ).first()
+    
 
-    async def update_estado(
-        self,
-        pago: Pago,
-        mp_status: str,
-        mp_payment_id: int | None = None,
-    ) -> Pago:
-        """Actualiza el estado del pago."""
-        pago.mp_status = mp_status
-        if mp_payment_id is not None:
-            pago.mp_payment_id = mp_payment_id
-        self.session.add(pago)
-        await self.session.flush()
-        return pago
+    def get_by_mp_merchant_order_id(self, merchant_order_id: int) -> Optional[Pago]:
+        return self.session.exec(
+            select(Pago).where(Pago.mp_merchant_order_id == merchant_order_id)
+        ).first()

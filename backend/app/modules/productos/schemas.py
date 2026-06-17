@@ -1,132 +1,100 @@
-"""
-Schemas Pydantic para el módulo de Productos.
-"""
-
-from datetime import datetime
-from typing import Optional
-
-from pydantic import BaseModel, ConfigDict, Field
+from sqlmodel import SQLModel, Field
+from app.modules.categorias.schemas import CategoriaOut
+from app.modules.ingredientes.schemas import IngredienteOut
 
 
-# ── Schemas anidados ──────────────────────────────────────────────────
+class CategoriaEnProducto(SQLModel):
+    categoria_id: int
+    es_principal: bool = False
 
 
-class ProductoCategoriaOut(BaseModel):
-    """Categoría asociada a un producto (response)."""
+class IngredienteEnProducto(SQLModel):
+    ingrediente_id: int
+    cantidad: float = 0
+    unidad_medida_id: int
+    es_removible: bool = False
 
-    model_config = ConfigDict(from_attributes=True)
 
+class ProductoCreate(SQLModel):
+    nombre: str = Field(max_length=150)
+    descripcion: str | None = None
+    precio_base: float = Field(default=0, ge=0)
+    imagenes_url: list[str] | None = None
+    stock_cantidad: int = Field(default=0, ge=0)
+    disponible: bool = True
+    unidad_venta_id: int | None = None
+    categorias: list[CategoriaEnProducto] = []
+    ingredientes: list[IngredienteEnProducto] = []
+
+
+class ProductoUpdate(SQLModel):
+    nombre: str | None = Field(default=None, max_length=150)
+    descripcion: str | None = None
+    precio_base: float | None = Field(default=None, ge=0)
+    imagenes_url: list[str] | None = None
+    stock_cantidad: int | None = Field(default=None, ge=0)
+    disponible: bool | None = None
+    unidad_venta_id: int | None = None
+    categorias: list[CategoriaEnProducto] | None = None
+    ingredientes: list[IngredienteEnProducto] | None = None
+
+
+class ProductoOut(SQLModel):
     id: int
     nombre: str
-    es_principal: bool
+    descripcion: str | None = None
+    precio_base: float = 0
+    imagenes_url: list[str] | None = None
+    stock_cantidad: int = 0
+    disponible: bool = True
+    unidad_venta_id: int | None = None
+    categorias: list[CategoriaOut] = []
 
 
-class ProductoIngredienteCreate(BaseModel):
-    """Schema para asociar ingrediente al crear/actualizar producto."""
-
-    ingrediente_id: int = Field(..., description="ID del ingrediente")
-    es_removible: bool = Field(..., description="Si el ingrediente puede removerse")
+class DisponibilidadRequest(SQLModel):
+    disponible: bool
 
 
-class ProductoIngredienteOut(BaseModel):
-    """Ingrediente asociado a un producto (response)."""
+class PaginatedProductos(SQLModel):
+    items: list[ProductoOut]
+    total: int
+    page: int
+    size: int
+    pages: int
 
-    model_config = ConfigDict(from_attributes=True)
 
+class IngredienteEnProductoRequest(SQLModel):
+    ingrediente_id: int
+    cantidad: float = Field(gt=0)
+    unidad_medida_id: int
+    es_removible: bool = False
+
+
+class ProductoIngredienteRead(SQLModel):
+    producto_id: int
+    ingrediente_id: int
+    cantidad: float
+    unidad_medida_id: int
+    es_removible: bool
+
+class IngredientePersonalizadoOut(SQLModel):
     id: int
     nombre: str
     es_alergeno: bool
     es_removible: bool
 
-
-# ── Schemas de Request ──────────────────────────────────────────────────
-
-
-class ProductoCreate(BaseModel):
-    """Schema para crear un producto."""
-
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    nombre: str = Field(..., min_length=1, max_length=200)
-    descripcion: Optional[str] = Field(default=None, max_length=2000)
-    imagen_url: Optional[str] = Field(default=None, max_length=500)
-    precio_base: float = Field(..., ge=0, description="Precio base del producto")
-    stock_cantidad: int = Field(default=0, ge=0, description="Cantidad en stock")
-    disponible: bool = Field(default=True, description="Si está disponible para la venta")
-    categoria_ids: list[int] = Field(default_factory=list, description="IDs de categorías asociadas")
-    ingredientes: list[ProductoIngredienteCreate] = Field(
-        default_factory=list,
-        description="Ingredientes asociados",
-    )
+class IngredienteEnProductoOut(IngredienteOut):
+    es_removible: bool = False
 
 
-class ProductoUpdate(BaseModel):
-    """Schema para actualizar un producto."""
-
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    nombre: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    descripcion: Optional[str] = Field(default=None, max_length=2000)
-    imagen_url: Optional[str] = Field(default=None, max_length=500)
-    precio_base: Optional[float] = Field(default=None, ge=0)
-    stock_cantidad: Optional[int] = Field(default=None, ge=0)
-    disponible: Optional[bool] = Field(default=None)
-    categoria_ids: Optional[list[int]] = Field(default=None, description="IDs de categorías (reemplazo completo)")
-    ingredientes: Optional[list[ProductoIngredienteCreate]] = Field(
-        default=None,
-        description="Ingredientes (reemplazo completo)",
-    )
-
-
-# ── Schemas de Response ─────────────────────────────────────────────────
-
-
-class ProductoResponse(BaseModel):
-    """Schema completo de producto (desde BD) con relaciones."""
-
-    model_config = ConfigDict(from_attributes=True)
-
+class ProductoDetail(SQLModel):
     id: int
     nombre: str
-    descripcion: Optional[str]
-    imagen_url: Optional[str]
-    precio_base: float
-    stock_cantidad: int
-    disponible: bool
-    eliminado_en: Optional[datetime]
-    creado_en: datetime
-    actualizado_en: datetime
-    categorias: list[ProductoCategoriaOut] = Field(default_factory=list)
-    ingredientes: list[ProductoIngredienteOut] = Field(default_factory=list)
-
-
-class ProductoListadoItem(BaseModel):
-    """Versión ligera de producto para listados paginados."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    nombre: str
-    descripcion: Optional[str]
-    imagen_url: Optional[str]
-    precio_base: float
-    stock_cantidad: int
-    disponible: bool
-    creado_en: datetime
-    categorias: list[ProductoCategoriaOut] = Field(default_factory=list)
-
-
-class ProductoListResponse(BaseModel):
-    """Response para listar productos."""
-
-    data: list[ProductoListadoItem]
-    total: int
-
-
-class ProductoDeleteResponse(BaseModel):
-    """Response para eliminación."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    eliminado_en: Optional[datetime]
+    descripcion: str | None = None
+    precio_base: float = 0
+    imagenes_url: list[str] | None = None
+    stock_cantidad: int = 0
+    disponible: bool = True
+    unidad_venta_id: int | None = None
+    categorias: list[CategoriaOut] = []
+    ingredientes: list[IngredienteEnProductoOut] = []

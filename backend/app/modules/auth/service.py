@@ -1,152 +1,135 @@
+import secrets
 import hashlib
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
-
-from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.config import get_settings
-from app.core.security import (
-    create_access_token,
-    create_refresh_token,
-    decode_access_token,
-    hash_password,
-    verify_password,
-)
-from app.modules.auth import repository
-from app.modules.auth.schemas import (
-    UserLoginRequest,
-    UserRegisterRequest,
-    UserResponse,
-)
-from app.modules.usuarios.model import Usuario
-
-settings = get_settings()
+from fastapi import Response
+from sqlmodel import Session
+from app.modules.usuarios.models import Usuario
+from app.modules.auth.schemas import LoginRequest, RegisterRequest, TokenResponse
+from app.modules.auth.uow import AuthUnitOfWork
+from app.modules.auth.refresh_models import RefreshToken
+from app.modules.roles.associations import UsuarioRol
+from app.core.security import hash_password, verify_password, create_access_token
+from app.core.config import settings
+from app.core.errors import http_error
 
 
-def _hash_refresh_token(token: str) -> str:
-    """Hashea el refresh token con SHA-256 para guardarlo de forma segura."""
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+class AuthService:
+    def __init__(self, session: Session) -> None:
+        self._session = session
+        self._refresh_expire_days = settings.REFRESH_TOKEN_EXPIRE_DAYS
 
-
-async def register(db: AsyncSession, data: UserRegisterRequest) -> UserResponse:
-    """Registra un usuario y retorna su perfil básico."""
-    existing_user = await repository.get_user_by_email(db, data.email)
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email ya registrado",
-        )
-
-    pwd_hash = hash_password(data.password)
-    user = await repository.create_user(
-        db=db,
-        email=data.email,
-        password_hash=pwd_hash,
-        nombre=data.nombre,
-        apellido=data.apellido,
-        telefono=data.telefono,
-    )
-
-    return UserResponse(
-        id=user.id,
-        email=user.email,
-        nombre=user.nombre,
-        apellido=user.apellido,
-        telefono=user.telefono,
-        roles=["CLIENT"],  # Lo acabamos de asignar por defecto
-    )
-
-
-async def authenticate(db: AsyncSession, data: UserLoginRequest) -> Usuario:
-    """Verifica credenciales de usuario."""
-    user = await repository.get_user_by_email(db, data.email)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales inválidas",
-        )
-
-    if not verify_password(data.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales inválidas",
-        )
-
-    return user
-
-
-async def create_tokens(db: AsyncSession, user_id: int) -> dict:
-    """Crea y persiste los tokens de acceso y refresco."""
-    # 1. Crear access token (JWT)
-    access_token = create_access_token(data={"sub": str(user_id)})
-
-    # 2. Crear refresh token string (UUID o random)
-    refresh_token_str = str(uuid4())
-
-    # 3. Guardar el refresh token hasheado
-    expires_at = datetime.now(timezone.utc) + timedelta(
-        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
-    )
-    token_hash = _hash_refresh_token(refresh_token_str)
+    def _utcnow(self) -> datetime:
+        return datetime.now(timezone.utc)
     
-    await repository.create_refresh_token(
-        db=db,
-        usuario_id=user_id,
-        token_hash=token_hash,
-        expires_at=expires_at,
-    )
-
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token_str,
-        "token_type": "bearer",
-        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    }
-
-
-async def refresh_access_token(db: AsyncSession, refresh_token: str) -> dict:
-    """Verifica el refresh token, lo revoca y crea uno nuevo."""
-    token_hash = _hash_refresh_token(refresh_token)
-    rt_record = await repository.get_refresh_token(db, token_hash)
-
-    if not rt_record:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh token inválido",
-        )
-
-    if rt_record.revoked_at is not None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh token ya fue utilizado o revocado",
-        )
-
-    if rt_record.expires_at < datetime.now(timezone.utc):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh token expirado",
-        )
-
-    # Marcar como usado (rotación)
-    await repository.mark_refresh_token_used(db, token_hash)
-
-    # Emitir nuevos tokens
-    return await create_tokens(db, rt_record.usuario_id)
-
-
-async def logout(db: AsyncSession, refresh_token: str) -> None:
-    """Cierra la sesión revocando el refresh token provisto."""
-    token_hash = _hash_refresh_token(refresh_token)
-    rt_record = await repository.get_refresh_token(db, token_hash)
+    def _hash_token(self, token_str: str) -> str:
+        return hashlib.sha256(token_str.encode()).hexdigest()
     
-    if rt_record and rt_record.revoked_at is None:
-        await repository.mark_refresh_token_used(db, token_hash)
+    def _create_refresh_token(self, uow: AuthUnitOfWork, usuario_id: int) -> str:
+        token_str = secrets.token_urlsafe(32)
+        token_hash = self._hash_token(token_str)
+        obj = RefreshToken(usuario_id=usuario_id, token_hash=token_hash, expires_at= self._utcnow()  + timedelta(days=self._refresh_expire_days))
+        uow._session.add(obj)
+        return token_str
+    
+    def _set_auth_cookies(self, response: Response, access_token: str, refresh_token: str) -> None:
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            samesite="lax",
+        )
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            max_age=self._refresh_expire_days * 24 * 60 * 60,
+            samesite="lax",
+        )
+    
+    def create_token(self, user: Usuario) -> str:
+        roles = [rol.codigo for rol in user.roles]
+        return create_access_token({"sub": user.email, "roles": roles, "usuario_id": user.id})
+    
+    def register(self, data: RegisterRequest, response: Response) -> TokenResponse:
+        with AuthUnitOfWork(self._session) as uow:
+            existing = uow.usuarios.get_by_email(data.email)
+            if existing:
+                raise http_error(409, "Este email ya fue registrado", "ALREADY_EXISTS", "email")
+            hashed = hash_password(data.password)
+            user = Usuario(
+                email=data.email,
+                nombre=data.nombre,
+                apellido=data.apellido,
+                celular=data.celular,
+                hashed_password=hashed,
+            )
+            uow.usuarios.add(user)
+            link = UsuarioRol(usuario_id=user.id, rol_codigo="CLIENT")
+            uow._session.add(link)
+            refresh_token_str = self._create_refresh_token(uow, user.id)
+            access_token = self.create_token(user)
+        self._set_auth_cookies(response, access_token, refresh_token_str)
+        expires_in = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token_str,
+            expires_in=expires_in,
+        )
+    
+    def login(self, data: LoginRequest, response: Response) -> TokenResponse:
+        with AuthUnitOfWork(self._session) as uow:
+            user = uow.usuarios.get_by_email(data.email)
+            if not user or not verify_password(data.password, user.hashed_password):
+                raise http_error(401, "Credenciales invalidas", "INVALID_CREDENTIALS")
+            refresh_token_str = self._create_refresh_token(uow, user.id)
+            access_token = self.create_token(user)
+        self._set_auth_cookies(response, access_token, refresh_token_str)
+        expires_in = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token_str,
+            expires_in=expires_in,
+        )
+    
+    def refresh(self, refresh_token_str: str, response: Response) -> dict:
+        with AuthUnitOfWork(self._session) as uow:
+            token_hash = self._hash_token(refresh_token_str)
+            token = uow.refresh_tokens.get_by_token_hash(token_hash)
 
 
-async def get_user_roles(db: AsyncSession, user_id: int) -> list[str]:
-    """Obtiene los códigos de rol del usuario."""
-    user = await repository.get_user_with_roles(db, user_id)
-    if not user:
-        return []
-    return [ur.rol_codigo for ur in user.usuario_roles]
+            now_utc = self._utcnow()
+
+            if not token:
+                raise http_error(401, "Refresh token invalido o expirado", "INVALID_CREDENTIALS")
+
+            expires_at = token.expires_at
+            if expires_at is not None and expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+            if expires_at < now_utc or token.revoked_at is not None:
+                raise http_error(401, "Refresh token invalido o expirado", "INVALID_CREDENTIALS")
+
+            token.revoked_at = now_utc
+            new_refresh_str = self._create_refresh_token(uow, token.usuario_id)
+            user = uow.usuarios.get_by_id(token.usuario_id)
+            if not user or user.deleted_at is not None:
+                raise http_error(401, "Usuario no encontrado", "UNAUTHORIZED")
+            access_token = self.create_token(user)
+        self._set_auth_cookies(response, access_token, new_refresh_str)
+        expires_in = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token_str,
+            expires_in=expires_in,
+        )
+    
+    def logout(self, refresh_token_str: str, response: Response) -> None:
+        if refresh_token_str:
+            with AuthUnitOfWork(self._session) as uow:
+                token_hash = self._hash_token(refresh_token_str)
+                token = uow.refresh_tokens.get_by_token_hash(token_hash)
+                if token:
+                    token.revoked_at = self._utcnow()
+        response.delete_cookie("access_token")
+        response.delete_cookie("refresh_token")

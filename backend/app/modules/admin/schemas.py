@@ -1,89 +1,34 @@
-"""
-Schemas para endpoints de administración.
-"""
-
+from sqlmodel import SQLModel
 from datetime import datetime
-from typing import Optional
-
-from pydantic import BaseModel, EmailStr
 
 
-class AdminUsuarioResponse(BaseModel):
-    id: int
-    nombre: str
-    apellido: str
-    email: str
-    telefono: Optional[str] = None
-    roles: list[str] = []
-    activo: bool = True
-    creado_en: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class AdminUsuarioDetailResponse(AdminUsuarioResponse):
-    actualizado_en: Optional[datetime] = None
-    eliminado_en: Optional[datetime] = None
-
-
-class AdminUsuarioListResponse(BaseModel):
-    data: list[AdminUsuarioResponse]
-    total: int
-    skip: int = 0
-    limit: int = 20
-
-
-class AdminUsuarioUpdate(BaseModel):
-    nombre: Optional[str] = None
-    apellido: Optional[str] = None
-    email: Optional[str] = None
-    roles: Optional[list[str]] = None
-
-
-class AdminUsuarioEstadoUpdate(BaseModel):
-    activo: bool
-
-
-# ── Dashboard schemas ──
-
-class DashboardResumenResponse(BaseModel):
-    ventas_totales: float = 0
-    cantidad_pedidos: int = 0
-    usuarios_registrados: int = 0
-    ticket_promedio: float = 0
-    pedidos_hoy: int = 0
-    productos_disponibles: int = 0
-
-
-class VentasPorMesEntry(BaseModel):
-    mes: str
-    ventas: float
-    cantidad_pedidos: int
-
-
-class TopProductoEntry(BaseModel):
-    nombre: str
-    cantidad_vendida: int
-    ingresos_totales: float
-
-
-class PedidosPorEstadoEntry(BaseModel):
+class EstadoCount(SQLModel):
     estado: str
     cantidad: int
 
 
-class ConfiguracionResponse(BaseModel):
-    clave: str
-    valor: str
-    descripcion: Optional[str] = None
-    actualizado_en: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
+class ProductoVendido(SQLModel):
+    nombre: str
+    total_vendido: int
 
 
-class ConfiguracionUpdate(BaseModel):
-    clave: str
-    valor: str
-    descripcion: Optional[str] = None
+class PedidoReciente(SQLModel):
+    id: int
+    usuario_email: str
+    total: float
+    estado_codigo: str
+    created_at: datetime
+
+
+class TotalPorFormaPago(SQLModel):
+    forma_pago: str
+    total: float
+
+
+class DashboardResponse(SQLModel):
+    total_pedidos: int
+    ingresos_totales: float
+    pedidos_por_estado: list[EstadoCount]
+    productos_mas_vendidos: list[ProductoVendido]
+    pedidos_recientes: list[PedidoReciente]
+    total_por_forma_pago: list[TotalPorFormaPago] = []

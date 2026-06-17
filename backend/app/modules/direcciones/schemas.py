@@ -1,33 +1,38 @@
-from typing import Optional
-
-from pydantic import BaseModel, ConfigDict, Field
+from sqlmodel import SQLModel
 
 
-class DireccionResponse(BaseModel):
-    id: int
-    alias: Optional[str] = None
+class DireccionCreate(SQLModel):
+    alias: str | None = None
     linea1: str
-    linea2: Optional[str] = None
+    linea2: str | None = None
     ciudad: str
-    codigo_postal: str
+    provincia: str | None = None
+    codigo_postal: str | None = None
+    latitud: float | None = None
+    longitud: float | None = None
+    es_principal: bool = False
+
+
+class DireccionUpdate(SQLModel):
+    alias: str | None = None
+    linea1: str | None = None
+    linea2: str | None = None
+    ciudad: str | None = None
+    provincia: str | None = None
+    codigo_postal: str | None = None
+    latitud: float | None = None
+    longitud: float | None = None
+    es_principal: bool | None = None
+
+
+class DireccionOut(SQLModel):
+    id: int
+    alias: str  | None 
+    linea1: str
+    linea2: str  | None 
+    ciudad: str
+    provincia: str  | None 
+    codigo_postal: str  | None 
+    latitud: float | None 
+    longitud: float | None 
     es_principal: bool
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class DireccionCreate(BaseModel):
-    alias: Optional[str] = Field(None, max_length=50)
-    linea1: str = Field(..., min_length=1)
-    linea2: Optional[str] = Field(None)
-    ciudad: str = Field(..., min_length=1, max_length=100)
-    codigo_postal: str = Field(..., min_length=1, max_length=10)
-    es_principal: bool = Field(default=False)
-
-
-class DireccionUpdate(BaseModel):
-    alias: Optional[str] = Field(None, max_length=50)
-    linea1: Optional[str] = Field(None, min_length=1)
-    linea2: Optional[str] = Field(None)
-    ciudad: Optional[str] = Field(None, min_length=1, max_length=100)
-    codigo_postal: Optional[str] = Field(None, min_length=1, max_length=10)
-    es_principal: Optional[bool] = Field(None)

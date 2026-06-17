@@ -1,159 +1,104 @@
-"""
-Script de seed idempotente.
-Carga datos catálogo necesarios para que la aplicación funcione:
-- 4 Roles (ADMIN, STOCK, PEDIDOS, CLIENT)
-- 6 Estados de Pedido (con es_terminal y orden)
-- 3 Formas de Pago
-- 1 Usuario admin con rol ADMIN
-"""
-
-import asyncio
-import logging
-
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.config import get_settings
-from app.core.database import async_session_factory, engine
+from sqlmodel import Session, select
 from app.core.security import hash_password
+from app.modules.usuarios.models import Usuario
+from app.modules.estado_pedido.models import EstadoPedido
+from app.modules.forma_pago.models import FormaPago
+from app.modules.roles.associations import UsuarioRol
+from app.modules.roles.models import Rol
+from app.modules.unidad_medida.models import UnidadMedida
 
-# Importar TODOS los modelos para que SQLAlchemy resuelva relaciones
-import app.modules.categorias.model  # noqa: F401
-import app.modules.direcciones.model  # noqa: F401
-import app.modules.ingredientes.model  # noqa: F401
-import app.modules.productos.model  # noqa: F401
-import app.modules.refreshtokens.model  # noqa: F401
+#Estados predefinidos de Roles
 
-from app.modules.pagos.model import FormaPago
-from app.modules.pedidos.model import EstadoPedido
-from app.modules.usuarios.model import Rol, Usuario, UsuarioRol
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-settings = get_settings()
-
-
-# ── Datos semilla ────────────────────────────────────────────────────
-
-ROLES = [
-    {"codigo": "ADMIN", "descripcion": "Administrador del sistema"},
-    {"codigo": "STOCK", "descripcion": "Gestor de stock y catálogo"},
-    {"codigo": "PEDIDOS", "descripcion": "Gestor de pedidos"},
-    {"codigo": "CLIENT", "descripcion": "Cliente registrado"},
+ROLES_SEED = [
+    Rol(codigo="ADMIN", nombre="Administrador", descripcion="Acceso total sin reestricciones"),
+    Rol(codigo="STOCK", nombre="Stock", descripcion="Actualiza stock y disponible"),
+    Rol(codigo="PEDIDOS", nombre="Pedidos", descripcion="Avanza estados de CONFIRMADO a ENTREGADO"),
+    Rol(codigo="CAJERO", nombre="Cajero", descripcion="Crea pedidos desde el punto de venta"),
+    Rol(codigo="CLIENT", nombre="Cliente", descripcion="Opera solo sus propios datos")
 ]
 
-ESTADOS_PEDIDO = [
-    {"codigo": "PENDIENTE", "descripcion": "Pedido creado, esperando pago", "orden": 1, "es_terminal": False},
-    {"codigo": "CONFIRMADO", "descripcion": "Pago aprobado, listo para preparar", "orden": 2, "es_terminal": False},
-    {"codigo": "EN_PREP", "descripcion": "En preparación", "orden": 3, "es_terminal": False},
-    {"codigo": "EN_CAMINO", "descripcion": "En camino al cliente", "orden": 4, "es_terminal": False},
-    {"codigo": "ENTREGADO", "descripcion": "Entregado al cliente", "orden": 5, "es_terminal": True},
-    {"codigo": "CANCELADO", "descripcion": "Pedido cancelado", "orden": 6, "es_terminal": True},
+def seed_roles(session: Session):
+    for rol in ROLES_SEED:
+        existing = session.get(Rol, rol.codigo)
+        if not existing:
+            session.add(rol)
+    session.commit()
+
+#Estados predefinidos de UnidadMedida
+
+UNIDADES_MEDIDA_SEED = [
+    UnidadMedida(nombre="kilogramo", simbolo="kg", tipo="peso"),
+    UnidadMedida(nombre="gramo", simbolo="g", tipo="peso"),
+    UnidadMedida(nombre="litro", simbolo="L", tipo="volumen"),
+    UnidadMedida(nombre="mililitro", simbolo="mL", tipo="volumen"),
+    UnidadMedida(nombre="unidad", simbolo="ud", tipo="contable"),
+    UnidadMedida(nombre="porción", simbolo="porciones", tipo="contable"),
 ]
 
-FORMAS_PAGO = [
-    {"codigo": "MERCADOPAGO", "nombre": "MercadoPago", "habilitado": True},
-    {"codigo": "EFECTIVO", "nombre": "Efectivo al recibir", "habilitado": True},
-    {"codigo": "TRANSFERENCIA", "nombre": "Transferencia bancaria", "habilitado": True},
-]
+def seed_unidades_medida(session: Session):
+    for um in UNIDADES_MEDIDA_SEED:
+        existing = session.exec(
+            select(UnidadMedida).where(UnidadMedida.simbolo == um.simbolo)
+        ).first()
+        if not existing:
+            session.add(um)
+    session.commit()
 
+#Creacion de cuenta admin automatica
 
-# ── Funciones de seed ────────────────────────────────────────────────
+ADMIN_SEED = {
+    "email": "admin@foodstore.com",
+    "nombre": "Admin",
+    "apellido": "FoodStore",
+    "password": "Admin1234!",
+}
 
-
-async def seed_roles(session: AsyncSession) -> None:
-    """Inserta roles si no existen."""
-    for role_data in ROLES:
-        existing = await session.execute(
-            select(Rol).where(Rol.codigo == role_data["codigo"])
-        )
-        if existing.scalar_one_or_none() is None:
-            session.add(Rol(**role_data))
-            logger.info("  ✓ Rol '%s' creado", role_data["codigo"])
-        else:
-            logger.info("  · Rol '%s' ya existe, omitido", role_data["codigo"])
-
-
-async def seed_estados_pedido(session: AsyncSession) -> None:
-    """Inserta estados de pedido si no existen."""
-    for estado_data in ESTADOS_PEDIDO:
-        existing = await session.execute(
-            select(EstadoPedido).where(EstadoPedido.codigo == estado_data["codigo"])
-        )
-        if existing.scalar_one_or_none() is None:
-            session.add(EstadoPedido(**estado_data))
-            logger.info("  ✓ Estado '%s' creado", estado_data["codigo"])
-        else:
-            logger.info("  · Estado '%s' ya existe, omitido", estado_data["codigo"])
-
-
-async def seed_formas_pago(session: AsyncSession) -> None:
-    """Inserta formas de pago si no existen."""
-    for fp_data in FORMAS_PAGO:
-        existing = await session.execute(
-            select(FormaPago).where(FormaPago.codigo == fp_data["codigo"])
-        )
-        if existing.scalar_one_or_none() is None:
-            session.add(FormaPago(**fp_data))
-            logger.info("  ✓ FormaPago '%s' creada", fp_data["codigo"])
-        else:
-            logger.info("  · FormaPago '%s' ya existe, omitida", fp_data["codigo"])
-
-
-async def seed_admin_user(session: AsyncSession) -> None:
-    """Crea el usuario admin con rol ADMIN si no existe."""
-    existing = await session.execute(
-        select(Usuario).where(Usuario.email == settings.ADMIN_EMAIL)
+def seed_admin_test(session: Session):
+    existing = session.exec(
+        select(Usuario).where(Usuario.email == ADMIN_SEED["email"])
+    ).first()
+    if existing:
+        return
+    admin = Usuario(
+        email=ADMIN_SEED["email"],
+        nombre=ADMIN_SEED["nombre"],
+        apellido=ADMIN_SEED["apellido"],
+        hashed_password=hash_password(ADMIN_SEED["password"]),
     )
-    admin = existing.scalar_one_or_none()
+    session.add(admin)
+    session.flush()
+    session.add(UsuarioRol(usuario_id=admin.id, rol_codigo="ADMIN"))
+    session.commit()
+    print(f"Admin creado: {ADMIN_SEED['email']} / {ADMIN_SEED['password']}")
 
-    if admin is None:
-        admin = Usuario(
-            nombre="Admin",
-            apellido="FoodStore",
-            email=settings.ADMIN_EMAIL,
-            password_hash=hash_password(settings.ADMIN_PASSWORD),
-        )
-        session.add(admin)
-        await session.flush()
+#Estados predefinidos de EstadoPedido
 
-        # Asignar rol ADMIN
-        session.add(UsuarioRol(usuario_id=admin.id, rol_codigo="ADMIN"))
-        logger.info("  ✓ Usuario admin '%s' creado con rol ADMIN", settings.ADMIN_EMAIL)
-    else:
-        logger.info("  · Usuario admin '%s' ya existe, omitido", settings.ADMIN_EMAIL)
+ESTADOS_PEDIDO_SEED = [
+    EstadoPedido(codigo="PENDIENTE", descripcion="Pedido creado, pago pendiente", orden=1, es_terminal=False),
+    EstadoPedido(codigo="CONFIRMADO", descripcion="Pago procesado y confirmado", orden=2, es_terminal=False),
+    EstadoPedido(codigo="EN_PREP", descripcion="En preparación en cocina", orden=3, es_terminal=False),
+    EstadoPedido(codigo="ENTREGADO", descripcion="Entrega confirmada", orden=4, es_terminal=True),
+    EstadoPedido(codigo="CANCELADO", descripcion="Pedido cancelado", orden=5, es_terminal=True),
+]
 
+def seed_estados_pedido(session: Session):
+    for estado in ESTADOS_PEDIDO_SEED:
+        existing = session.get(EstadoPedido, estado.codigo)
+        if not existing:
+            session.add(estado)
+    session.commit()
 
-# ── Main ─────────────────────────────────────────────────────────────
+#Estados predefinidos de FormaPago
 
+FORMAS_PAGO_SEED = [
+    FormaPago(codigo="EFECTIVO", descripcion="Pago en efectivo", habilitado=True),
+    FormaPago(codigo="MERCADOPAGO", descripcion="Pago con Mercado Pago (tarjeta/QR)", habilitado=True),
+    FormaPago(codigo="TRANSFERENCIA", descripcion="Transferencia bancaria", habilitado=True),
+]
 
-async def run_seed() -> None:
-    """Ejecuta todas las funciones de seed en orden."""
-    logger.info("═" * 50)
-    logger.info("🌱 Iniciando seed de Food Store...")
-    logger.info("═" * 50)
-
-    async with async_session_factory() as session:
-        async with session.begin():
-            logger.info("\n📋 Roles:")
-            await seed_roles(session)
-
-            logger.info("\n📦 Estados de Pedido:")
-            await seed_estados_pedido(session)
-
-            logger.info("\n💳 Formas de Pago:")
-            await seed_formas_pago(session)
-
-            logger.info("\n👤 Usuario Admin:")
-            await seed_admin_user(session)
-
-    logger.info("\n" + "═" * 50)
-    logger.info("✅ Seed completado exitosamente!")
-    logger.info("═" * 50)
-
-    await engine.dispose()
-
-
-if __name__ == "__main__":
-    asyncio.run(run_seed())
+def seed_formas_pago(session: Session):
+    for fp in FORMAS_PAGO_SEED:
+        existing = session.get(FormaPago, fp.codigo)
+        if not existing:
+            session.add(fp)
+    session.commit()

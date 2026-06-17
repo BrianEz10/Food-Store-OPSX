@@ -1,232 +1,79 @@
-"""
-Servicio de administración.
-Maneja la lógica de negocio de gestión de usuarios.
-"""
+from sqlmodel import Session, select
+from sqlalchemy import func
 
-from fastapi import HTTPException, status
-
-from app.core.uow import UnitOfWork
-from app.modules.admin.schemas import (
-    AdminUsuarioDetailResponse,
-    AdminUsuarioListResponse,
-    AdminUsuarioResponse,
-    AdminUsuarioUpdate,
-    AdminUsuarioEstadoUpdate,
-    DashboardResumenResponse,
-    VentasPorMesEntry,
-    TopProductoEntry,
-    PedidosPorEstadoEntry,
-    ConfiguracionResponse,
-    ConfiguracionUpdate,
-)
-from app.modules.usuarios.model import Usuario, UsuarioRol
-from app.modules.auth.repository import revoke_all_user_tokens
+from app.modules.pedidos.models import Pedido, DetallePedido
+from app.modules.productos.models import Producto
+from app.modules.usuarios.models import Usuario
+from app.modules.admin.schemas import DashboardResponse, EstadoCount, ProductoVendido, PedidoReciente, TotalPorFormaPago
+from app.modules.admin.uow import AdminUnitOfWork
+from app.modules.forma_pago.models import FormaPago
 
 
 class AdminService:
-    @staticmethod
-    async def listar_usuarios(
-        current_user: Usuario,
-        skip: int = 0,
-        limit: int = 20,
-        q: str | None = None,
-        rol: str | None = None,
-        incluir_eliminados: bool = False,
-    ) -> AdminUsuarioListResponse:
-        """Lista usuarios con búsqueda, filtros y paginación."""
-        async with UnitOfWork() as uow:
-            usuarios, total = await uow.usuarios.list_all_admin(
-                skip=skip,
-                limit=limit,
-                q=q,
-                rol=rol,
-                incluir_eliminados=incluir_eliminados,
-            )
+    def __init__(self, session: Session) -> None:
+        self._session = session
 
-        return AdminUsuarioListResponse(
-            data=[_to_response(u) for u in usuarios],
-            total=total,
-            skip=skip,
-            limit=limit,
+    def get_dashboard(self) -> DashboardResponse:
+        with AdminUnitOfWork(self._session) as uow:
+            total_pedidos = uow._session.exec(
+                select(func.count(Pedido.id)).where(Pedido.deleted_at == None)
+            ).one()
+
+
+            ingresos = uow._session.exec(
+                select(func.coalesce(func.sum(Pedido.total), 0))
+                .where(Pedido.estado_codigo == "ENTREGADO", Pedido.deleted_at == None)
+            ).one()
+            ingresos_totales = float(ingresos)
+
+
+            filas_estados = uow._session.exec(
+                select(Pedido.estado_codigo, func.count(Pedido.id))
+                .where(Pedido.deleted_at == None)
+                .group_by(Pedido.estado_codigo)
+            ).all()
+            pedidos_por_estado = [EstadoCount(estado=e, cantidad=c) for e, c in filas_estados]
+
+
+            filas_productos = uow._session.exec(
+                select(Producto.nombre, func.coalesce(func.sum(DetallePedido.cantidad), 0))
+                .select_from(DetallePedido)
+                .join(Producto, DetallePedido.producto_id == Producto.id)
+                .group_by(DetallePedido.producto_id, Producto.nombre)
+                .order_by(func.sum(DetallePedido.cantidad).desc())
+                .limit(5)
+            ).all()
+            productos_mas_vendidos = [ProductoVendido(nombre=n, total_vendido=int(c)) for n, c in filas_productos]
+
+
+            filas_recientes = uow._session.exec(
+                select(Pedido.id, Usuario.email, Pedido.total, Pedido.estado_codigo, Pedido.created_at)
+                .join(Usuario, Pedido.usuario_id == Usuario.id)
+                .where(Pedido.deleted_at == None)
+                .order_by(Pedido.created_at.desc())
+                .limit(10)
+            ).all()
+            pedidos_recientes = [
+                PedidoReciente(id=pid, usuario_email=email, total=float(t), estado_codigo=est, created_at=ca)
+                for pid, email, t, est, ca in filas_recientes
+            ]
+            
+            
+            filas_formas_pago = uow._session.exec(
+                select(FormaPago.codigo, func.coalesce(func.sum(Pedido.total), 0))
+                .select_from(Pedido)
+                .join(FormaPago, Pedido.forma_pago_codigo == FormaPago.codigo)
+                .where(Pedido.estado_codigo == "ENTREGADO", Pedido.deleted_at == None)
+                .group_by(FormaPago.codigo)
+            ).all()
+            total_por_forma_pago = [TotalPorFormaPago(forma_pago=fp, total=float(t)) for fp, t in filas_formas_pago]
+
+
+        return DashboardResponse(
+            total_pedidos=total_pedidos,
+            ingresos_totales=ingresos_totales,
+            pedidos_por_estado=pedidos_por_estado,
+            productos_mas_vendidos=productos_mas_vendidos,
+            pedidos_recientes=pedidos_recientes,
+            total_por_forma_pago=total_por_forma_pago
         )
-
-    @staticmethod
-    async def get_usuario_detail(
-        usuario_id: int,
-        current_user: Usuario,
-    ) -> AdminUsuarioDetailResponse:
-        """Obtiene detalle de un usuario."""
-        async with UnitOfWork() as uow:
-            usuario = await uow.usuarios.get_by_id(usuario_id)
-            if not usuario:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Usuario no encontrado",
-                )
-
-            return _to_detail_response(usuario)
-
-    @staticmethod
-    async def update_usuario(
-        usuario_id: int,
-        data: AdminUsuarioUpdate,
-        current_user: Usuario,
-    ) -> AdminUsuarioResponse:
-        """Actualiza datos y roles de un usuario."""
-        async with UnitOfWork() as uow:
-            usuario = await uow.usuarios.get_by_id(usuario_id)
-            if not usuario:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Usuario no encontrado",
-                )
-
-            if data.nombre is not None:
-                usuario.nombre = data.nombre
-            if data.apellido is not None:
-                usuario.apellido = data.apellido
-            if data.email is not None:
-                usuario.email = data.email
-
-            if data.roles is not None:
-                if current_user.id == usuario_id and "ADMIN" not in data.roles:
-                    admin_count = await uow.usuarios.count_by_role("ADMIN")
-                    if admin_count <= 1:
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="No puedes quitar el último rol ADMIN del sistema",
-                        )
-
-                for ur in list(usuario.usuario_roles):
-                    uow.session.delete(ur)
-
-                for rol_codigo in data.roles:
-                    nuevo_ur = UsuarioRol(
-                        usuario_id=usuario_id,
-                        rol_codigo=rol_codigo,
-                        asignado_por_id=current_user.id,
-                    )
-                    uow.session.add(nuevo_ur)
-
-                await revoke_all_user_tokens(uow.session, usuario_id)
-
-            await uow.usuarios.update(usuario)
-
-        async with UnitOfWork() as uow_read:
-            usuario_actualizado = await uow_read.usuarios.get_by_id(usuario_id)
-            return _to_response(usuario_actualizado)
-
-    @staticmethod
-    async def toggle_usuario_estado(
-        usuario_id: int,
-        data: AdminUsuarioEstadoUpdate,
-        current_user: Usuario,
-    ) -> AdminUsuarioResponse:
-        """Activa o desactiva un usuario (soft-delete/restore)."""
-        if current_user.id == usuario_id and not data.activo:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No puedes desactivar tu propio usuario",
-            )
-
-        async with UnitOfWork() as uow:
-            usuario = await uow.usuarios.get_by_id(usuario_id)
-            if not usuario:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Usuario no encontrado",
-                )
-
-            if data.activo:
-                usuario.eliminado_en = None
-            else:
-                from datetime import datetime
-                usuario.eliminado_en = datetime.utcnow()
-
-            await uow.usuarios.update(usuario)
-
-            if not data.activo:
-                await revoke_all_user_tokens(uow.session, usuario_id)
-
-        async with UnitOfWork() as uow_read:
-            usuario_actualizado = await uow_read.usuarios.get_by_id(usuario_id)
-            return _to_response(usuario_actualizado)
-
-
-def _to_response(u: Usuario) -> AdminUsuarioResponse:
-    return AdminUsuarioResponse(
-        id=u.id,
-        nombre=u.nombre,
-        apellido=u.apellido,
-        email=u.email,
-        telefono=u.telefono,
-        roles=[ur.rol_codigo for ur in (u.usuario_roles or [])],
-        activo=u.eliminado_en is None,
-        creado_en=u.creado_en,
-    )
-
-
-def _to_detail_response(u: Usuario) -> AdminUsuarioDetailResponse:
-    return AdminUsuarioDetailResponse(
-        id=u.id,
-        nombre=u.nombre,
-        apellido=u.apellido,
-        email=u.email,
-        telefono=u.telefono,
-        roles=[ur.rol_codigo for ur in (u.usuario_roles or [])],
-        activo=u.eliminado_en is None,
-        creado_en=u.creado_en,
-        actualizado_en=u.actualizado_en,
-        eliminado_en=u.eliminado_en,
-    )
-
-
-# ── Dashboard service ──
-
-
-class DashboardService:
-    @staticmethod
-    async def get_resumen() -> DashboardResumenResponse:
-        from app.core.uow import UnitOfWork
-        async with UnitOfWork() as uow:
-            kpis = await uow.pedidos.get_resumen_kpis()
-        return DashboardResumenResponse(**kpis)
-
-    @staticmethod
-    async def get_ventas_por_mes() -> list[VentasPorMesEntry]:
-        from app.core.uow import UnitOfWork
-        async with UnitOfWork() as uow:
-            data = await uow.pedidos.get_ventas_por_mes()
-        return [VentasPorMesEntry(**d) for d in data]
-
-    @staticmethod
-    async def get_top_productos(limit: int = 10) -> list[TopProductoEntry]:
-        from app.core.uow import UnitOfWork
-        async with UnitOfWork() as uow:
-            data = await uow.pedidos.get_top_productos(limit)
-        return [TopProductoEntry(**d) for d in data]
-
-    @staticmethod
-    async def get_pedidos_por_estado() -> list[PedidosPorEstadoEntry]:
-        from app.core.uow import UnitOfWork
-        async with UnitOfWork() as uow:
-            data = await uow.pedidos.get_pedidos_por_estado()
-        return [PedidosPorEstadoEntry(**d) for d in data]
-
-    @staticmethod
-    async def listar_configuracion() -> list[ConfiguracionResponse]:
-        from app.core.uow import UnitOfWork
-        async with UnitOfWork() as uow:
-            return await uow.configuraciones.get_all_as_dict()
-        # Note: returns list of dicts, we convert in the router
-
-    @staticmethod
-    async def actualizar_configuracion(data: ConfiguracionUpdate) -> ConfiguracionResponse:
-        from app.core.uow import UnitOfWork
-        async with UnitOfWork() as uow:
-            config = await uow.configuraciones.upsert(
-                clave=data.clave,
-                valor=data.valor,
-                descripcion=data.descripcion,
-            )
-        return ConfiguracionResponse.model_validate(config)

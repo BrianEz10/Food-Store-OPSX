@@ -1,15 +1,13 @@
-# docker-compose.yml
 services:
 
-  # ─── Base de Datos ───
   db:
-    image: postgres:16-alpine
+    image: postgres:15
     environment:
-      POSTGRES_DB: foodstore
+      POSTGRES_DB: food_store
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -18,41 +16,29 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── Backend (FastAPI) ───
   backend:
     build: ./backend
     depends_on:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/foodstore
-      ADMIN_EMAIL: admin@foodstore.com
-      ADMIN_PASSWORD: Admin123
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/food_store
       SECRET_KEY: dev-secret-key-change-in-production
-      DEBUG: "true"
+      CORS_ORIGINS: '["http://localhost:5173"]'
+      FRONTEND_URL: http://localhost:5173
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
-    # Espera a que la BD esté lista antes de arrancar
-    command: >
-      sh -c "
-        echo '⏳ Esperando BD...' &&
-        sleep 3 &&
-        alembic upgrade head &&
-        python -m app.db.seed &&
-        echo '🚀 Backend listo!' &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-      "
+      - ./imagenesProductos:/app/imagenesProductos
 
-  # ─── Frontend (Vite) ───
   frontend:
     image: node:22-alpine
     working_dir: /app
     depends_on:
       - backend
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8000/api/v1
     ports:
       - "5173:5173"
     volumes:

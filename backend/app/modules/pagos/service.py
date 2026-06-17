@@ -1,210 +1,328 @@
-"""
-Servicio de Pagos.
-Maneja la creación de preferencias en MercadoPago, el procesamiento
-de webhooks IPN con idempotencia, y la consulta de estado.
-"""
-
-import hashlib
-import hmac
 import uuid
+import logging
+from datetime import datetime
+from typing import Optional
+from sqlmodel import Session, select
+from app.core.config import settings
+from app.modules.pedidos.models import Pedido, HistorialEstadoPedido
+from app.modules.pagos.models import Pago
+from app.modules.pagos.schemas import PagoCrearResponse, PagoEstadoResponse
+from app.modules.pagos.uow import PagoUnitOfWork
+from app.core.errors import http_error
 
-import mercadopago
-from fastapi import HTTPException, Request, status
 
-from app.core.config import get_settings
-from app.core.uow import UnitOfWork
-from app.modules.pagos.model import Pago
-from app.modules.pagos.schemas import PagoEstadoResponse, PagoResponse
+logger = logging.getLogger(__name__)
 
 
-class PagosService:
-    @staticmethod
-    def _get_sdk() -> mercadopago.SDK:
-        settings = get_settings()
-        return mercadopago.SDK(settings.MP_ACCESS_TOKEN)
+class PaymentService:
+    def __init__(self, session: Session) -> None:
+        self._session = session
 
-    @staticmethod
-    async def create_preference(pedido_id: int, usuario_id: int) -> PagoResponse:
-        """
-        Crea una preferencia de pago en MercadoPago y registra el Pago en BD.
-        El external_reference actúa como idempotency_key para el webhook.
-        """
-        settings = get_settings()
 
-        async with UnitOfWork() as uow:
-            # Validar que el pedido existe y pertenece al usuario
-            pedido = await uow.pedidos.get_by_id(pedido_id)
-            if not pedido or pedido.usuario_id != usuario_id:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Pedido no encontrado",
-                )
-            if pedido.estado_codigo != "PENDIENTE":
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Solo se puede iniciar el pago de pedidos en estado PENDIENTE",
-                )
+    def _get_mp_access_token(self) -> Optional[str]:
+        return settings.MP_ACCESS_TOKEN
 
-            idempotency_key = str(uuid.uuid4())
+    def _get_mp_public_key(self) -> Optional[str]:
+        return settings.MP_PUBLIC_KEY
 
-            # Crear preferencia en MercadoPago
-            sdk = PagosService._get_sdk()
+    def _crear_preferencia_mp(self, monto: float, titulo: str, pedido_id: int, back_urls: dict) -> dict:
+
+        access_token = self._get_mp_access_token()
+
+        if not access_token:
+            raise RuntimeError("MercadoPago no está configurado. Configure MP_ACCESS_TOKEN")
+
+        try:
+            import mercadopago
+            sdk = mercadopago.SDK(access_token)
+
             preference_data = {
-                "items": [
-                    {
-                        "id": str(pedido.id),
-                        "title": f"Pedido #{pedido.id} - Food Store",
-                        "quantity": 1,
-                        "unit_price": float(pedido.total),
-                        "currency_id": "ARS",
-                    }
-                ],
-                "external_reference": idempotency_key,
-                "back_urls": {
-                    "success": f"http://localhost:5173/pago/success?pedido_id={pedido.id}",
-                    "failure": f"http://localhost:5173/pago/failure?pedido_id={pedido.id}",
-                    "pending": f"http://localhost:5173/pago/pending?pedido_id={pedido.id}",
-                },
+                "items": [{
+                    "title": titulo,
+                    "quantity": 1,
+                    "unit_price": float(monto),
+                    "currency_id": "ARS",
+                }],
+                "external_reference": str(pedido_id),
+                "back_urls": back_urls,
+                "notification_url": (
+                    f"{settings.MP_NOTIFICATION_URL}/api/v1/pagos/webhook"
+                    if settings.MP_NOTIFICATION_URL
+                    else "http://localhost:8000/api/v1/pagos/webhook"
+                ),
                 "auto_return": "approved",
-                "notification_url": settings.MP_NOTIFICATION_URL or None,
             }
 
-            pref_response = sdk.preference().create(preference_data)
-            if pref_response["status"] not in (200, 201):
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail="Error al crear preferencia en MercadoPago",
+            result = sdk.preference().create(preference_data)
+
+            if result.get("status") not in (200, 201):
+                logger.error("Error creando preferencia MP: %s", result)
+                raise RuntimeError(
+                    "Error al crear preferencia: "
+                    f"{result.get('response', {}).get('message', 'desconocido')}"
                 )
 
-            preference = pref_response["response"]
-            preference_id: str = preference["id"]
-            init_point: str = preference.get("sandbox_init_point", preference["init_point"])
+            response = result.get("response", {})
+            return {
+                "preference_id": response.get("id"),
+                "init_point": response.get("init_point"),
+            }
 
-            # Registrar pago en BD
-            pago = Pago(
-                pedido_id=pedido.id,
-                monto=float(pedido.total),
-                mp_status="pending",
-                external_reference=idempotency_key,
-                idempotency_key=idempotency_key,
+        except ImportError:
+            raise RuntimeError("pip install mercadopago")
+        except Exception as e:
+            logger.exception("Error inesperado al crear preferencia MP")
+            raise RuntimeError(f"Error de conexión con MP: {str(e)}")
+
+    def _consultar_pago_mp(self, payment_id: int) -> dict:
+
+        access_token = self._get_mp_access_token()
+
+        if not access_token:
+            raise RuntimeError("MP no configurado")
+
+        try:
+            import mercadopago
+            sdk = mercadopago.SDK(access_token)
+            result = sdk.payment().get(payment_id)
+
+            if result.get("status") != 200:
+                logger.error("Error consultando pago MP %s: %s", payment_id, result)
+                raise RuntimeError(f"Error al consultar pago {payment_id}")
+
+            response = result.get("response", {})
+            return {
+                "mp_payment_id": response.get("id"),
+                "mp_status": response.get("status"),
+                "mp_status_detail": response.get("status_detail"),
+                "mp_merchant_order_id": response.get("merchant_order_id"),
+            }
+
+        except ImportError:
+            raise RuntimeError("pip install mercadopago")
+        except Exception as e:
+            logger.exception("Error consultando pago MP %s", payment_id)
+            raise RuntimeError(f"Error de conexión con MP: {str(e)}")
+
+
+    def crear_pago(self, pedido_id: int, usuario_id: int) -> PagoCrearResponse:
+        
+        pedido = self._session.get(Pedido, pedido_id)
+
+        if not pedido:
+            raise http_error(404, "Pedido no encontrado", "NOT_FOUND", "pedido_id")
+
+        if pedido.usuario_id != usuario_id:
+            raise http_error(403, "No puedes pagar un pedido que no te pertenece", "FORBIDDEN")
+
+        if not self._get_mp_access_token():
+            raise http_error(400, "MercadoPago no configurado. Configure MP_ACCESS_TOKEN", "NOT_CONFIGURED")
+
+        base_url = settings.MP_NOTIFICATION_URL or "http://localhost:8000"
+        back_urls = {
+            "success": f"{base_url}/api/v1/pagos/redirect/{pedido_id}/success",
+            "failure": f"{base_url}/api/v1/pagos/redirect/{pedido_id}/failure",
+            "pending": f"{base_url}/api/v1/pagos/redirect/{pedido_id}/pending",
+        }
+
+        try:
+            mp_data = self._crear_preferencia_mp(
+                monto=pedido.total,
+                titulo=f"Pedido #{pedido_id} - FoodStore",
+                pedido_id=pedido_id,
+                back_urls=back_urls,
             )
-            uow.session.add(pago)
-            await uow.session.flush()
+        except RuntimeError as e:
+            raise http_error(400, str(e), "NOT_CONFIGURED")
 
-        return PagoResponse(
-            id=pago.id,
-            pedido_id=pago.pedido_id,
-            monto=pago.monto,
-            mp_payment_id=pago.mp_payment_id,
-            mp_status=pago.mp_status,
-            external_reference=pago.external_reference,
-            preference_id=preference_id,
-            init_point=init_point,
-        )
+        with PagoUnitOfWork(self._session) as uow:
+            pago = Pago(
+                pedido_id=pedido_id,
+                monto=pedido.total,
+                transaction_amount=pedido.total,
+                external_reference=str(pedido.id),
+                estado="pendiente",
+                mp_preference_id=mp_data["preference_id"],
+                mp_init_point=mp_data.get("init_point"),
+                idempotency_key=str(uuid.uuid4()),
+            )
+            uow.pagos.add(pago)
 
-    @staticmethod
-    async def process_webhook(request: Request) -> dict:
-        """
-        Procesa el webhook IPN de MercadoPago.
-        - Valida firma x-signature si MP_WEBHOOK_SECRET está configurado.
-        - Aplica idempotencia por mp_payment_id.
-        - Actualiza estado del Pago.
-        """
-        settings = get_settings()
-        body = await request.body()
-        payload = await request.json()
+            return PagoCrearResponse(
+                pago_id=pago.id,
+                preference_id=mp_data["preference_id"],
+                init_point=mp_data.get("init_point"),
+                public_key=self._get_mp_public_key(),
+            )
 
-        # Validar firma si hay secret configurado
-        if settings.MP_ACCESS_TOKEN:
-            x_signature = request.headers.get("x-signature", "")
-            x_request_id = request.headers.get("x-request-id", "")
-            data_id = payload.get("data", {}).get("id", "")
+    def procesar_webhook(self, data: dict, query_params: Optional[dict] = None) -> dict:
 
-            if x_signature and settings.MP_ACCESS_TOKEN:
-                # MP firma: ts=...;v1=hmac_sha256(secret, "id:DATA_ID;request-id:X_REQUEST_ID;ts:TS;")
-                parts = dict(p.split("=", 1) for p in x_signature.split(";") if "=" in p)
-                ts = parts.get("ts", "")
-                v1 = parts.get("v1", "")
-                manifest = f"id:{data_id};request-id:{x_request_id};ts:{ts};"
-                expected = hmac.new(
-                    settings.MP_ACCESS_TOKEN.encode(),
-                    manifest.encode(),
-                    hashlib.sha256,
-                ).hexdigest()
-                if not hmac.compare_digest(expected, v1):
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="Firma de webhook inválida",
+        logger.info("Webhook recibido: data=%s qs=%s", data, query_params or {})
+
+        if not data and query_params:
+            data = query_params
+
+        topic = data.get("type") or data.get("topic")
+        data_id = data.get("data_id") or (data.get("data") or {}).get("id")
+        payment_id = data.get("id")
+
+        if not data_id and query_params:
+            data_id = query_params.get("data.id") or query_params.get("id")
+        if not topic and query_params:
+            topic = query_params.get("topic") or query_params.get("type")
+
+        pago_mp_id = payment_id or data_id
+
+        if not pago_mp_id:
+            return {"status": "ignored", "reason": "No payment ID"}
+
+        if topic not in (None, "payment"):
+            return {"status": "ignored", "reason": f"Topic: {topic}"}
+
+        try:
+            mp_info = self._consultar_pago_mp(int(pago_mp_id))
+            estado_mp = mp_info.get("mp_status")
+
+            if estado_mp == "approved":
+                nuevo_estado = "aprobado"
+            elif estado_mp in ("rejected", "cancelled", "refunded", "charged_back"):
+                nuevo_estado = "rechazado"
+            elif estado_mp in ("pending", "in_process", "authorized"):
+                nuevo_estado = "pendiente"
+            else:
+                return {"status": "ignored",
+                        "reason": f"Unknown status: {estado_mp}"}
+
+            with PagoUnitOfWork(self._session) as uow:
+                pago = uow.pagos.get_by_mp_payment_id(int(pago_mp_id))
+
+                if not pago and mp_info.get("mp_merchant_order_id"):
+                    pago = uow.pagos.get_by_mp_merchant_order_id(
+                        mp_info["mp_merchant_order_id"]
                     )
 
-        # Solo procesar notificaciones de pagos
-        notification_type = payload.get("type", payload.get("topic", ""))
-        if notification_type != "payment":
-            return {"status": "ignored", "reason": "not_payment_type"}
+                if not pago:
+                    return {"status": "ignored", "reason": "Pago not found in local DB"}
 
-        mp_payment_id = int(payload.get("data", {}).get("id", 0))
-        if not mp_payment_id:
-            return {"status": "ignored", "reason": "no_payment_id"}
+                if pago.estado != "pendiente":
+                    return {"status": "already_processed", "estado": pago.estado}
 
-        # Consultar estado real a MP API
-        sdk = PagosService._get_sdk()
-        mp_response = sdk.payment().get(mp_payment_id)
-        if mp_response["status"] != 200:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Error al consultar MP")
+                pago.mp_payment_id = int(pago_mp_id)
+                pago.mp_status = estado_mp
+                pago.mp_status_detail = mp_info.get("mp_status_detail")
+                pago.mp_merchant_order_id = mp_info.get("mp_merchant_order_id")
+                pago.estado = nuevo_estado
+                pago.updated_at = datetime.utcnow()
 
-        payment_data = mp_response["response"]
-        mp_status: str = payment_data.get("status", "unknown")
-        external_ref: str = payment_data.get("external_reference", "")
+                if nuevo_estado == "aprobado":
+                    pedido = self._session.exec(
+                        select(Pedido).where(Pedido.id == pago.pedido_id).with_for_update()
+                    ).first()
+                    if pedido and pedido.estado_codigo == "PENDIENTE":
+                        historial = HistorialEstadoPedido(
+                            pedido_id=pedido.id,
+                            estado_desde="PENDIENTE",
+                            estado_hacia="CONFIRMADO",
+                            usuario_id=None,
+                            motivo=None,
+                        )
+                        pedido.estado_codigo = "CONFIRMADO"
+                        self._session.add(historial)
 
-        async with UnitOfWork() as uow:
-            # Idempotencia: buscar por mp_payment_id
-            pago_existente = await uow.pagos.get_by_mp_payment_id(mp_payment_id)
+            return {
+                "status": "processed",
+                "pago_id": pago.id,
+                "estado": nuevo_estado,
+                "pedido_id": pago.pedido_id,
+            }
 
-            if pago_existente and pago_existente.mp_status == mp_status:
-                # Ya procesado con mismo estado → skip
-                return {"status": "skipped", "reason": "already_processed"}
+        except Exception as e:
+            logger.exception("Error procesando webhook MP")
+            return {"status": "error", "reason": str(e)}
 
-            # Buscar el pago por external_reference si no lo encontramos por payment_id
-            if not pago_existente:
-                from sqlalchemy import select
-                from app.modules.pagos.model import Pago as PagoModel
-                result = await uow.session.execute(
-                    select(PagoModel).where(PagoModel.external_reference == external_ref)
-                )
-                pago_existente = result.scalar_one_or_none()
+    def confirmar_pago(self, pedido_id: int, payment_id: Optional[int] = None) -> PagoEstadoResponse:
 
-            if not pago_existente:
-                return {"status": "ignored", "reason": "pago_not_found"}
+        pedido = self._session.exec(
+            select(Pedido).where(Pedido.id == pedido_id).with_for_update()
+        ).first()
 
-            # Actualizar estado
-            await uow.pagos.update_estado(pago_existente, mp_status, mp_payment_id)
+        if not pedido:
+            raise http_error(404, "Pedido no encontrado", "NOT_FOUND", "pedido_id")
 
-            # Si aprobado, el FSM backend (Change 11a) se encargará de la transición PENDIENTE→CONFIRMADO
-            if mp_status == "approved":
-                from app.modules.pedidos.fsm import OrderFSM
-                await OrderFSM.transition_state(
-                    uow=uow,
-                    pedido_id=pago_existente.pedido_id,
-                    nuevo_estado="CONFIRMADO",
-                    motivo="Pago aprobado vía MercadoPago",
-                )
+        resolved_payment_id = payment_id
+        if not resolved_payment_id:
+            with PagoUnitOfWork(self._session) as uow:
+                pago_local = uow.pagos.get_ultimo_by_pedido(pedido_id)
+                if pago_local and pago_local.mp_payment_id:
+                    resolved_payment_id = pago_local.mp_payment_id
 
-        return {"status": "processed", "mp_status": mp_status}
+        if resolved_payment_id:
+            try:
+                mp_info = self._consultar_pago_mp(resolved_payment_id)
+            except RuntimeError as e:
+                raise http_error(400, str(e), "NOT_CONFIGURED")
 
-    @staticmethod
-    async def get_estado(pedido_id: int, usuario_id: int) -> PagoEstadoResponse:
-        """Retorna el estado actual del pago y del pedido para polling frontend."""
-        async with UnitOfWork() as uow:
-            pedido = await uow.pedidos.get_by_id(pedido_id)
-            if not pedido or pedido.usuario_id != usuario_id:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido no encontrado")
+            estado_mp = mp_info.get("mp_status")
+            if estado_mp == "approved":
+                nuevo_estado = "aprobado"
+            elif estado_mp in ("rejected", "cancelled", "refunded", "charged_back"):
+                nuevo_estado = "rechazado"
+            else:
+                nuevo_estado = "pendiente"
 
-            pago = await uow.pagos.get_by_pedido_id(pedido_id)
+            with PagoUnitOfWork(self._session) as uow:
+                pago = uow.pagos.get_by_mp_payment_id(resolved_payment_id)
+                if not pago:
+                    pago = uow.pagos.get_ultimo_by_pedido(pedido_id)
 
+                if pago:
+                    pago.mp_payment_id = resolved_payment_id
+                    pago.mp_status = estado_mp
+                    pago.mp_status_detail = mp_info.get("mp_status_detail")
+                    pago.mp_merchant_order_id = mp_info.get(
+                        "mp_merchant_order_id"
+                    )
+                    pago.estado = nuevo_estado
+                    pago.updated_at = datetime.utcnow()
+
+                    if nuevo_estado == "aprobado" and pedido.estado_codigo == "PENDIENTE":
+                        historial = HistorialEstadoPedido(
+                            pedido_id=pedido.id,
+                            estado_desde="PENDIENTE",
+                            estado_hacia="CONFIRMADO",
+                            usuario_id=None,
+                            motivo=None,
+                        )
+                        pedido.estado_codigo = "CONFIRMADO"
+                        self._session.add(historial)
+
+            return PagoEstadoResponse(estado=nuevo_estado, pedido_id=pedido_id)
+
+        with PagoUnitOfWork(self._session) as uow:
+            pago_local = uow.pagos.get_ultimo_by_pedido(pedido_id)
             return PagoEstadoResponse(
-                pedido_id=pedido.id,
-                pago_id=pago.id if pago else None,
-                pago_estado=pago.mp_status if pago else None,
-                mp_payment_id=pago.mp_payment_id if pago else None,
-                pedido_estado=pedido.estado_codigo,
+                estado=pago_local.estado if pago_local else None,
+                pedido_id=pedido_id,
             )
+        
+    def obtener_pago(self, pedido_id: int, usuario_id: int, roles: list[str]) -> dict | None:
+        with PagoUnitOfWork(self._session) as uow:
+            pago = uow.pagos.get_ultimo_by_pedido(pedido_id)
+            if not pago:
+                raise http_error(404, "Pago no encontrado", "NOT_FOUND", "pedido_id")
+
+            pedido = self._session.get(Pedido, pago.pedido_id)
+            is_admin = any(r in ("ADMIN",) for r in roles)
+            if not is_admin and pedido and pedido.usuario_id != usuario_id:
+                raise http_error(404, "Pago no encontrado", "NOT_FOUND", "pedido_id")
+
+            return {
+                "id": pago.id,
+                "pedido_id": pago.pedido_id,
+                "monto": pago.monto,
+                "estado": pago.estado,
+                "mp_payment_id": pago.mp_payment_id,
+                "mp_status": pago.mp_status,
+                "mp_status_detail": pago.mp_status_detail,
+                "created_at": pago.created_at,
+            }

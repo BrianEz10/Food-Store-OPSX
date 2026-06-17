@@ -1,40 +1,23 @@
-"""
-Schemas Pydantic para el módulo de Pagos.
-"""
-
-from pydantic import BaseModel
+from typing import Optional
+from sqlmodel import SQLModel, Field
 
 
-class PagoCreate(BaseModel):
+class CrearPagoRequest(SQLModel):
+    pedido_id: int = Field(..., description="ID del pedido a pagar")
+
+
+class ConfirmarPagoRequest(SQLModel):
+    pedido_id: int = Field(..., description="ID del pedido")
+    payment_id: Optional[int] = Field(default=None, description="ID del pago en MP")
+
+
+class PagoCrearResponse(SQLModel):
+    pago_id: int
+    preference_id: str
+    init_point: Optional[str] = None
+    public_key: Optional[str] = None
+
+
+class PagoEstadoResponse(SQLModel):
+    estado: Optional[str] = None
     pedido_id: int
-    monto: float
-
-
-class PagoResponse(BaseModel):
-    id: int
-    pedido_id: int
-    monto: float
-    mp_payment_id: int | None
-    mp_status: str
-    external_reference: str
-    preference_id: str | None = None  # devuelto solo al crear
-    init_point: str | None = None     # devuelto solo al crear
-
-    class Config:
-        from_attributes = True
-
-
-class WebhookPayload(BaseModel):
-    """Payload básico del webhook IPN de MercadoPago."""
-    id: int | None = None
-    topic: str | None = None
-    type: str | None = None
-    data: dict | None = None
-
-
-class PagoEstadoResponse(BaseModel):
-    pedido_id: int
-    pago_id: int | None
-    pago_estado: str | None
-    mp_payment_id: int | None
-    pedido_estado: str

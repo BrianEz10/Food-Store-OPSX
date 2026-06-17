@@ -1,53 +1,57 @@
-from typing import List, Optional
+from datetime import datetime
+from sqlmodel import SQLModel
+from pydantic import EmailStr, field_validator
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-
-
-class UserRegisterRequest(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    email: EmailStr
-    password: str
+class RegisterRequest(SQLModel):
     nombre: str
     apellido: str
-    telefono: str | None = None
+    email: EmailStr
+    celular: str | None = None
+    password: str
+
+    @field_validator("nombre", "apellido")
+    @classmethod
+    def name_length(cls, v: str) -> str:
+        if len(v) < 2 or len(v) > 80:
+            raise ValueError("Debe tener entre 2 y 80 caracteres")
+        return v
 
     @field_validator("password")
     @classmethod
-    def validate_password_strength(cls, v: str) -> str:
+    def password_min_length(cls, v: str) -> str:
         if len(v) < 8:
-            raise ValueError("El password debe tener al menos 8 caracteres")
+            raise ValueError("La contraseña debe tener al menos 8 caracteres")
         return v
 
+class UserPublic(SQLModel):
+    id: int
+    email: str
+    nombre: str
+    apellido: str
+    celular: str | None = None
 
-class UserLoginRequest(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    email: EmailStr
-    password: str
-
-
-class TokenResponse(BaseModel):
+class TokenResponse(SQLModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
     expires_in: int
 
-
-class TokenRefreshRequest(BaseModel):
-    refresh_token: str
-
-
-class UserResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class UserResponse(SQLModel):
     id: int
-    email: EmailStr
+    email: str
     nombre: str
     apellido: str
-    telefono: str | None = None
-    roles: list[str] = Field(default_factory=list)
+    celular: str | None
+    roles: list[str]
+    created_at: datetime
 
+class LoginRequest(SQLModel):
+    email: EmailStr
+    password: str
 
-class MessageResponse(BaseModel):
-    detail: str
+    @field_validator("password")
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("La contraseña debe tener al menos 8 caracteres")
+        return v

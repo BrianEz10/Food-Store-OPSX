@@ -1,52 +1,30 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: #fff8f7;
-    --foreground: #261819;
-  }
-
-  .dark {
-    --background: #3d2c2d;
-    --foreground: #ffeced;
-  }
-
-  body {
-    background-color: #fff8f7;
-    color: #261819;
-  }
-
-  .dark body {
-    background-color: #3d2c2d;
-    color: #ffeced;
-  }
+@theme {
+  --font-sans: 'Manrope', sans-serif;
+  --font-display: 'Playfair Display', serif;
+  --color-background: #131407;
+  --color-on-background: #e4e4cc;
+  --color-surface: #131407;
+  --color-surface-container: #1f2111;
+  --color-surface-container-high: #2a2b1b;
+  --color-on-surface: #e4e4cc;
+  --color-on-surface-variant: #c4c7c7;
+  --color-primary: #c8c6c5;
+  --color-on-primary: #313030;
+  --color-primary-container: #121212;
+  --color-secondary: #e9c349;
+  --color-on-secondary: #3c2f00;
+  --color-secondary-container: #af8d11;
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-outline: #8e9192;
+  --color-outline-variant: #444748;
 }
 
-@layer utilities {
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-
-  .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-
-  @keyframes slide-in-right {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
-
-  @keyframes slide-up {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-  }
-
-  .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
-  .animate-slide-up { animation: slide-up 0.3s ease-out; }
+body {
+  background: var(--color-background);
+  color: var(--color-on-background);
+  font-family: var(--font-sans);
+  margin: 0;
 }

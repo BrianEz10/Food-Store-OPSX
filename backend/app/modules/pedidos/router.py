@@ -1,117 +1,75 @@
-"""
-Endpoints para la gestión de pedidos.
-"""
-
-from typing import Optional
-
-from fastapi import APIRouter, Depends, Query, status
-
-from app.core.dependencies import get_current_active_user, require_role
-from app.modules.pedidos.schemas import (
-    HistorialEstadoPedidoResponse,
-    PedidoCreate,
-    PedidoDetailResponse,
-    PedidoListResponse,
-    PedidoResponse,
-    PedidoStatusUpdate,
-)
-from app.modules.pedidos.service import PedidosService
-from app.modules.usuarios.model import Usuario
-
-router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
+from typing import Annotated
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, status
+from app.core.database import SessionDep
+from app.core.deps import CurrentUser, require_role
+from app.core.security import decode_access_token
+from app.modules.usuarios.models import Usuario
+from app.modules.pedidos.schemas import HistorialOut, PedidoCreate, PedidoOut, AvanceEstadoRequest, PaginatedPedidos
+from app.modules.pedidos.service import PedidoService
+from app.core.ws_manager import manager
 
 
-@router.get(
-    "",
-    response_model=PedidoListResponse,
-    summary="Listar pedidos",
-)
-async def listar_pedidos(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
-    estado: Optional[str] = Query(None),
-    usuario_id: Optional[int] = Query(None),
-    current_user: Usuario = Depends(get_current_active_user),
-) -> PedidoListResponse:
-    """
-    Lista pedidos. Los clientes ven solo sus pedidos.
-    Gestores/Admins ven todos y pueden filtrar por usuario_id.
-    """
-    return await PedidosService.get_user_pedidos(
-        current_user=current_user,
-        skip=skip,
-        limit=limit,
-        estado=estado,
-        filtro_usuario_id=usuario_id,
-    )
+router = APIRouter(prefix="/pedidos", tags=["pedidos"])
 
 
-@router.get(
-    "/{pedido_id}",
-    response_model=PedidoDetailResponse,
-    summary="Obtener detalle de pedido",
-)
-async def obtener_detalle_pedido(
-    pedido_id: int,
-    current_user: Usuario = Depends(get_current_active_user),
-) -> PedidoDetailResponse:
-    """
-    Retorna el detalle completo de un pedido con historial y estado del pago.
-    """
-    return await PedidosService.get_pedido_detail(pedido_id, current_user)
+def get_pedido_service(session: SessionDep) -> PedidoService:
+    return PedidoService(session)
 
 
-@router.post(
-    "",
-    response_model=PedidoResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Crear un nuevo pedido",
-    description="Crea un pedido de forma atómica validando stock y guardando snapshots.",
-    dependencies=[Depends(require_role(["CLIENT", "ADMIN"]))],
-)
-async def crear_pedido(
-    schema: PedidoCreate,
-    current_user: Usuario = Depends(get_current_active_user),
-) -> PedidoResponse:
-    """
-    Crea un nuevo pedido a partir del payload enviado.
-    """
-    return await PedidosService.create_pedido(schema, current_user)
+@router.post("/", response_model=PedidoOut, status_code=status.HTTP_201_CREATED)
+async def crear(data: PedidoCreate, current_user: Annotated[Usuario, Depends(require_role(["CLIENT", "CAJERO", "ADMIN", "PEDIDOS"]))], svc: PedidoService = Depends(get_pedido_service)) -> PedidoOut:
+    roles = [rol.codigo for rol in current_user.roles]
+    return await svc.create(data, current_user.id, roles)
 
 
-@router.get(
-    "/{pedido_id}/historial",
-    response_model=list[HistorialEstadoPedidoResponse],
-    summary="Obtener historial de estados",
-)
-async def obtener_historial_pedido(
-    pedido_id: int,
-    current_user: Usuario = Depends(get_current_active_user),
-) -> list[HistorialEstadoPedidoResponse]:
-    """
-    Retorna el historial de estados de un pedido específico.
-    """
-    return await PedidosService.get_pedido_history(pedido_id, current_user)
+@router.get("/", response_model=PaginatedPedidos)
+def listar(current_user: CurrentUser, page: int = Query(default=1, ge=1), size: int = Query(default=20, ge=1, le=100), svc: PedidoService = Depends(get_pedido_service)) -> PaginatedPedidos:
+    roles = [rol.codigo for rol in current_user.roles]
+    return svc.get_all(current_user.id, roles, page, size)
 
 
-@router.post(
-    "/{pedido_id}/estado",
-    response_model=PedidoResponse,
-    summary="Actualizar estado del pedido (FSM)",
-    dependencies=[Depends(require_role(["PEDIDOS", "ADMIN"]))],
-)
-async def actualizar_estado_pedido(
-    pedido_id: int,
-    schema: PedidoStatusUpdate,
-    current_user: Usuario = Depends(get_current_active_user),
-) -> PedidoResponse:
-    """
-    Transiciona un pedido a un nuevo estado validando las reglas de la FSM.
-    Solo para gestores y administradores.
-    """
-    return await PedidosService.transition_pedido_state(
-        pedido_id=pedido_id,
-        nuevo_estado=schema.nuevo_estado,
-        usuario_id=current_user.id,
-        motivo=schema.motivo,
-    )
+@router.get("/{id}", response_model=PedidoOut)
+def obtener(id: int, current_user: CurrentUser,svc: PedidoService = Depends(get_pedido_service)) -> PedidoOut:
+    roles = [rol.codigo for rol in current_user.roles]
+    return svc.get_by_id(id, current_user.id, roles)
+
+
+@router.get("/{id}/historial", response_model=list[HistorialOut])
+def obtener_historial(id: int, current_user: CurrentUser, svc: PedidoService = Depends(get_pedido_service)) -> list[HistorialOut]:
+    roles = [rol.codigo for rol in current_user.roles]
+    return svc.get_historial(id, current_user.id, roles)
+
+
+@router.patch("/{id}/estado", response_model=PedidoOut)
+async def avanzar_estado(id: int, data: AvanceEstadoRequest, current_user: Annotated[Usuario, Depends(require_role(["ADMIN", "PEDIDOS"]))], svc: PedidoService = Depends(get_pedido_service)) -> PedidoOut:
+    roles = [rol.codigo for rol in current_user.roles]
+    return await svc.avanzar_estado(id, data, current_user.id, roles)
+
+
+@router.delete("/{id}", response_model=PedidoOut)
+async def cancelar_pedido(id: int, current_user: CurrentUser, svc: PedidoService = Depends(get_pedido_service)) -> PedidoOut:
+    roles = [rol.codigo for rol in current_user.roles]
+    return await svc.avanzar_estado(id, AvanceEstadoRequest(estado_hacia="CANCELADO", motivo="Cancelado por el cliente"), current_user.id, roles,)
+
+
+@router.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket, token: str = Query(...), pedido_id: int | None = Query(None)):
+    payload = decode_access_token(token)
+    if not payload:
+        await websocket.close(code=1008, reason="Token inválido o expirado")
+        return
+
+    roles: list[str] = payload.get("roles", [])
+    is_admin = any(r in ("ADMIN", "PEDIDOS", "CAJERO") for r in roles)
+    usuario_id: int | None = payload.get("usuario_id")
+
+    channel = str(pedido_id) if pedido_id else ("admin" if is_admin else f"user:{usuario_id}" if usuario_id else "user:unknown")
+    await manager.connect(websocket, channel)
+
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        pass
+    finally:
+        manager.disconnect(websocket, channel)

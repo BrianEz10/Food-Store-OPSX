@@ -1,109 +1,69 @@
-from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import Session
+from app.modules.direcciones.models import DireccionEntrega
+from app.modules.direcciones.schemas import DireccionCreate, DireccionUpdate, DireccionOut
+from app.modules.direcciones.uow import DireccionUnitOfWork
+from app.core.errors import http_error
 
-from app.modules.direcciones.repository import DireccionRepository
-from app.modules.direcciones.schemas import (
-    DireccionCreate,
-    DireccionResponse,
-    DireccionUpdate,
-)
-
-
-async def _verify_ownership(repo: DireccionRepository, direccion_id: int, usuario_id: int):
-    direccion = await repo.get_by_id(direccion_id)
-    if not direccion or direccion.usuario_id != usuario_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Dirección no encontrada"
-        )
-    return direccion
-
-
-async def list_direcciones(db: AsyncSession, usuario_id: int) -> list[DireccionResponse]:
-    repo = DireccionRepository(db)
-    direcciones = await repo.list_by_user(usuario_id)
-    return [DireccionResponse.model_validate(d) for d in direcciones]
-
-
-async def create_direccion(db: AsyncSession, usuario_id: int, data: DireccionCreate) -> DireccionResponse:
-    repo = DireccionRepository(db)
+class DireccionService:
+    def __init__(self, session: Session) -> None:
+        self._session = session
     
-    direcciones = await repo.list_by_user(usuario_id)
+    def _get_mia_or_404(self, uow: DireccionUnitOfWork, usuario_id: int, direccion_id: int) -> DireccionEntrega:
+        direccion = uow.direcciones.get_by_id(direccion_id)
+        if not direccion or direccion.usuario_id != usuario_id:
+            raise http_error(404, "Direccion no encontrada", "NOT_FOUND")
+        return direccion
     
-    # Invariante 1: Si es la primera, forzar principal
-    if not direcciones:
-        data.es_principal = True
-        
-    # Invariante 2: Si se marca como principal, desmarcar las demás
-    if data.es_principal:
-        await repo.unset_all_default(usuario_id)
-        
-    direccion = await repo.create_for_user(usuario_id, data)
-    return DireccionResponse.model_validate(direccion)
-
-
-async def get_direccion(db: AsyncSession, usuario_id: int, direccion_id: int) -> DireccionResponse:
-    repo = DireccionRepository(db)
-    direccion = await _verify_ownership(repo, direccion_id, usuario_id)
-    return DireccionResponse.model_validate(direccion)
-
-
-async def update_direccion(
-    db: AsyncSession, usuario_id: int, direccion_id: int, data: DireccionUpdate
-) -> DireccionResponse:
-    repo = DireccionRepository(db)
-    direccion = await _verify_ownership(repo, direccion_id, usuario_id)
+    def get_mis_direcciones(self, usuario_id: int) -> list[DireccionOut]:
+        with DireccionUnitOfWork(self._session) as uow:
+            direcciones = uow.direcciones.get_by_usuario(usuario_id)
+            result = [DireccionOut.model_validate(d) for d in direcciones]
+        return result
     
-    if data.es_principal is True and not direccion.es_principal:
-        await repo.unset_all_default(usuario_id)
-    elif data.es_principal is False and direccion.es_principal:
-        direcciones = await repo.list_by_user(usuario_id)
-        if len(direcciones) == 1:
-            # No se puede quitar el flag principal si es la única
-            data.es_principal = True
-        else:
-            # Reasignar a la más reciente que no sea esta
-            otras = [d for d in direcciones if d.id != direccion_id]
-            if otras:
-                await repo.set_default(otras[-1].id)
-                
-    updated = await repo.update_direccion(direccion_id, data)
-    if not updated:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Dirección no encontrada"
-        )
-    return DireccionResponse.model_validate(updated)
-
-
-async def delete_direccion(db: AsyncSession, usuario_id: int, direccion_id: int) -> None:
-    repo = DireccionRepository(db)
-    direccion = await _verify_ownership(repo, direccion_id, usuario_id)
+    def get_by_id(self, usuario_id: int, direccion_id: int) -> DireccionOut:
+        with DireccionUnitOfWork(self._session) as uow:
+            direccion = self._get_mia_or_404(uow, usuario_id, direccion_id)
+            result = DireccionOut.model_validate(direccion)
+        return result
     
-    direcciones = await repo.list_by_user(usuario_id)
-    if len(direcciones) == 1:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No se puede eliminar la única dirección de la cuenta"
-        )
-        
-    if direccion.es_principal:
-        # Reasignar a otra antes de borrar
-        otras = [d for d in direcciones if d.id != direccion_id]
-        if otras:
-            await repo.set_default(otras[-1].id)
-            
-    await repo.delete_direccion(direccion_id)
-
-
-async def set_predeterminada(db: AsyncSession, usuario_id: int, direccion_id: int) -> DireccionResponse:
-    repo = DireccionRepository(db)
-    direccion = await _verify_ownership(repo, direccion_id, usuario_id)
+    def marcar_principal(self, usuario_id: int, direccion_id: int) -> DireccionOut:
+        with DireccionUnitOfWork(self._session) as uow:
+            direccion = self._get_mia_or_404(uow, usuario_id, direccion_id)
+            actual_principal = uow.direcciones.get_principal(usuario_id)
+            if actual_principal and actual_principal.id != direccion_id:
+                actual_principal.es_principal = False
+            direccion.es_principal = True
+            result = DireccionOut.model_validate(direccion)
+        return result
     
-    if not direccion.es_principal:
-        await repo.unset_all_default(usuario_id)
-        await repo.set_default(direccion_id)
-        
-    updated = await repo.get_by_id(direccion_id)
-    return DireccionResponse.model_validate(updated)
+    def create(self, usuario_id: int, data: DireccionCreate) -> DireccionOut:
+        with DireccionUnitOfWork(self._session) as uow:
+            datos = data.model_dump()
+            datos["usuario_id"] = usuario_id
+            direccion = DireccionEntrega(**datos)
+            uow.direcciones.add(direccion)
+            result = DireccionOut.model_validate(direccion)
+        return result
+    
+    def update(self, usuario_id: int, direccion_id: int, data: DireccionUpdate) -> DireccionOut:
+        with DireccionUnitOfWork(self._session) as uow:
+            direccion = self._get_mia_or_404(uow, usuario_id, direccion_id)
+            patch = data.model_dump(exclude_unset=True)
+            for field, value in patch.items():
+                setattr(direccion, field, value)
+            uow.direcciones.add(direccion)
+            result = DireccionOut.model_validate(direccion)
+        return result
+    
+    def admin_get_by_id(self, direccion_id: int) -> DireccionOut:
+        with DireccionUnitOfWork(self._session) as uow:
+            direccion = uow.direcciones.get_by_id(direccion_id)
+            if not direccion:
+                raise http_error(404, "Direccion no encontrada", "NOT_FOUND")
+            result = DireccionOut.model_validate(direccion)
+        return result
 
+    def delete(self, usuario_id: int, direccion_id: int) -> None:
+        with DireccionUnitOfWork(self._session) as uow:
+            direccion = self._get_mia_or_404(uow, usuario_id, direccion_id)
+            uow.direcciones.soft_delete(direccion)

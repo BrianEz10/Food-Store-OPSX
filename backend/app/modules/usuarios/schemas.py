@@ -1,25 +1,31 @@
+from sqlmodel import SQLModel
 from datetime import datetime
-from typing import Optional
-
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
-class PerfilResponse(BaseModel):
+class UsuarioOut(SQLModel):
     id: int
+    email: str
     nombre: str
     apellido: str
-    email: EmailStr
+    celular: str | None = None
+    roles: list[str] = []
+    created_at: datetime
+    deleted_at: datetime | None = None
+
+
+class UsuarioUpdate(SQLModel):
+    nombre: str | None = None
+    apellido: str | None = None
+    celular: str | None = None
+
+
+class AsignarRolesRequest(SQLModel):
     roles: list[str]
-    creado_en: datetime
-
-    model_config = ConfigDict(from_attributes=True)
 
 
-class PerfilUpdate(BaseModel):
-    nombre: Optional[str] = Field(None, min_length=1, max_length=100)
-    apellido: Optional[str] = Field(None, min_length=1, max_length=100)
-
-
-class CambioPasswordRequest(BaseModel):
-    current_password: str = Field(..., min_length=1)
-    new_password: str = Field(..., min_length=8)
+class PaginatedUsuarios(SQLModel):
+    items: list[UsuarioOut]
+    total: int
+    page: int
+    size: int
+    pages: int

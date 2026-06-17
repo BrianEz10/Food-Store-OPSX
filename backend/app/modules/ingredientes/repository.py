@@ -1,29 +1,30 @@
-"""
-Repositorio de Ingrediente.
-"""
-
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.base_repository import BaseRepository
-from app.modules.ingredientes.model import Ingrediente
+from sqlmodel import Session, select
+from app.core.repository import BaseRepository
+from app.modules.ingredientes.models import Ingrediente
 
 
 class IngredienteRepository(BaseRepository[Ingrediente]):
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: Session) -> None:
         super().__init__(session, Ingrediente)
+    
 
-    async def get_all_active(self) -> list[Ingrediente]:
-        """Obtiene todos los ingredientes activos."""
-        stmt = self._base_query().where(Ingrediente.eliminado_en.is_(None))
-        result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+    def get_by_id(self, id: int) -> Ingrediente | None:
+        return self.session.exec(
+            select(Ingrediente).where(Ingrediente.id == id, Ingrediente.deleted_at == None)
+        ).first()
+    
 
-    async def get_alergenos(self) -> list[Ingrediente]:
-        """Obtiene solo los ingredientes que son alérgenos."""
-        stmt = (
-            self._base_query()
-            .where(Ingrediente.eliminado_en.is_(None))
-            .where(Ingrediente.es_alergeno == True)  # noqa: E712
+    def get_all(self, offset: int = 0, limit: int = 200) -> list[Ingrediente]:
+        return list(
+            self.session.exec(
+                select(Ingrediente).where(Ingrediente.deleted_at == None)
+                .order_by(Ingrediente.id)
+                .offset(offset).limit(limit)
+            ).all()
         )
-        result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+    
+    
+    def get_by_nombre(self, nombre: str) -> Ingrediente | None:
+        return self.session.exec(
+            select(Ingrediente).where(Ingrediente.nombre == nombre)
+        ).first()
