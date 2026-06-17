@@ -3,7 +3,7 @@ import { useCartStore } from '@/store/useCartStore'
 import { Link, useNavigate } from 'react-router-dom'
 
 export function Navbar() {
-  const { user, token, logout } = useAuthStore()
+  const { user, token, rol, logout } = useAuthStore()
   const totalItems = useCartStore((s) => s.items.reduce((a, i) => a + i.cantidad, 0))
   const navigate = useNavigate()
 
@@ -18,6 +18,9 @@ export function Navbar() {
           {token ? (
             <>
               <Link to="/orders" style={{ color: '#c4c7c7', textDecoration: 'none', fontSize: 14 }}>Mis Pedidos</Link>
+              {rol === 'admin' && (
+                <Link to="/admin" style={{ color: '#e9c349', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>Admin</Link>
+              )}
               <Link to="/cart" style={{ color: '#c4c7c7', textDecoration: 'none', fontSize: 14, position: 'relative' }}>
                 Carrito {totalItems > 0 && <span style={{ position: 'absolute', top: -8, right: -14, background: '#e9c349', color: '#131407', fontSize: 11, borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>{totalItems}</span>}
               </Link>

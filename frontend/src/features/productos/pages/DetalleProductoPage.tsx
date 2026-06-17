@@ -92,10 +92,17 @@ export default function DetalleProductoPage() {
             </div>
           )}
 
+          {!product.disponible || product.stock_cantidad === 0 ? (
+            <div style={{ background: '#93000a30', border: '1px solid #ffb4ab40', padding: '12px 16px', borderRadius: 4, textAlign: 'center' }}>
+              <p style={{ color: '#ffb4ab', fontSize: 14, margin: 0 }}>Producto sin stock</p>
+              <p style={{ color: '#6b6151', fontSize: 12, margin: '4px 0 0' }}>No disponible por el momento</p>
+            </div>
+          ) : (
           <button onClick={handleAdd}
             style={{ width: '100%', padding: '14px', background: '#e9c349', color: '#131407', border: 'none', fontSize: 15, fontWeight: 600, cursor: 'pointer', borderRadius: 4 }}>
             Agregar al carrito
           </button>
+          )}
         </div>
       </div>
     </div>

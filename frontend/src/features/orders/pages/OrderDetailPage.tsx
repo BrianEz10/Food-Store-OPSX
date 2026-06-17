@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useOrder, useCancelOrder } from '@/features/orders/hooks/useOrders'
 import { useOrderWS } from '@/lib/useOrderWS'
 import { imgUrl } from '@/lib/img'
+import ConfirmModal from '@/shared/ConfirmModal'
 
 const STATUS_LABELS: Record<string, string> = {
   PENDIENTE: 'Pendiente',
@@ -22,6 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const orderId = Number(id)
+  const [showCancelModal, setShowCancelModal] = useState(false)
   useOrderWS(orderId)
   const { data: order, isLoading } = useOrder(orderId)
   const cancelMutation = useCancelOrder()
@@ -122,12 +125,25 @@ export default function OrderDetailPage() {
 
       {isCancelable && (
         <div style={{ marginTop: 24, textAlign: 'center' }}>
-          <button onClick={() => { if (confirm('¿Cancelar pedido?')) cancelMutation.mutate({ id: orderId, motivo: 'Solicitud del cliente' }) }}
+          <button onClick={() => setShowCancelModal(true)}
             style={{ background: 'transparent', border: '1px solid #93000a', color: '#ffb4ab', padding: '10px 24px', fontSize: 13, cursor: 'pointer', borderRadius: 4 }}>
             Cancelar pedido
           </button>
         </div>
       )}
+
+      <ConfirmModal
+        open={showCancelModal}
+        title="Cancelar pedido"
+        message="¿Estás seguro de que querés cancelar este pedido? Esta acción no se puede deshacer."
+        confirmLabel="Sí, cancelar"
+        cancelLabel="Volver"
+        onConfirm={() => {
+          setShowCancelModal(false)
+          cancelMutation.mutate({ id: orderId, motivo: 'Solicitud del cliente' })
+        }}
+        onCancel={() => setShowCancelModal(false)}
+      />
     </div>
   )
 }

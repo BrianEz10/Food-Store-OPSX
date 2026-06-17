@@ -65,6 +65,9 @@ export default function StoreHome() {
               <div style={{ padding: 16 }}>
                 <h3 style={{ color: '#e4e4cc', fontSize: 15, margin: '0 0 4px', fontWeight: 500 }}>{p.nombre}</h3>
                 <p style={{ color: '#e9c349', fontSize: 16, margin: 0, fontWeight: 600 }}>${p.precio_base.toLocaleString('es-AR')}</p>
+                {!p.disponible || p.stock_cantidad === 0 ? (
+                  <span style={{ display: 'inline-block', marginTop: 6, padding: '2px 8px', background: '#93000a30', color: '#ffb4ab', border: '1px solid #ffb4ab40', fontSize: 11 }}>Sin stock</span>
+                ) : <span style={{ display: 'inline-block', marginTop: 6, padding: '2px 8px', background: '#1a3a1a30', color: '#80c080', fontSize: 11 }}>En stock</span>}
                 {p.descripcion && <p style={{ color: '#6b6151', fontSize: 12, margin: '4px 0 0' }}>{p.descripcion}</p>}
               </div>
             </Link>

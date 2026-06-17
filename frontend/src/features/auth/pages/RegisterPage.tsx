@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useRegister } from '@/features/auth/hooks/useAuth'
 import { parseError } from '@/lib/errorParser'
+import { useToastStore } from '@/store/useToastStore'
 
 export default function RegisterPage() {
   const [nombre, setNombre] = useState('')
@@ -12,12 +13,14 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const registerMutation = useRegister()
+  const toast = useToastStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     try {
       const rol = await registerMutation.mutateAsync({ nombre, apellido, email, password, celular: celular || undefined })
+      toast.success(`¡Bienvenido, ${nombre}!`)
       navigate(rol === 'cliente' ? '/' : '/admin/dashboard', { replace: true })
     } catch (err) {
       setError(parseError(err))

@@ -29,16 +29,26 @@ export default function CheckoutPage() {
   const formastePago = formas?.filter((f) => f.habilitado) || []
 
   const dirPrincipal = direcciones?.find((d) => d.es_principal) || direcciones?.[0]
+  const [selectedDirId, setSelectedDirId] = useState<number | null>(null)
+
+  // pre-seleccionar dirección principal al cargar
+  const dirsLoaded = !loadingDirs && direcciones !== undefined
+  if (dirsLoaded && selectedDirId === null && dirPrincipal) {
+    setSelectedDirId(dirPrincipal.id)
+  }
+
+  const direccionSeleccionada = direcciones?.find((d) => d.id === selectedDirId)
 
   const handleCrearDireccion = async () => {
     try {
-      await createDirection.mutateAsync({
+      const nueva = await createDirection.mutateAsync({
         calle: dirValues.calle, numero: dirValues.numero, ciudad: dirValues.ciudad,
         provincia: dirValues.provincia, codigo_postal: dirValues.codigo_postal,
         piso: dirValues.piso || undefined, referencia: dirValues.referencia || undefined,
       })
       toast.success('Dirección guardada')
       setMostrarFormDireccion(false)
+      setSelectedDirId(nueva.id)
       setDirValues({ calle: '', numero: '', ciudad: '', provincia: '', codigo_postal: '', piso: '', referencia: '' })
     } catch (e) { toast.error(parseError(e)) }
   }
@@ -46,7 +56,7 @@ export default function CheckoutPage() {
   const handleCrearPedido = async () => {
     if (items.length === 0) { toast.error('El carrito está vacío'); return }
     if (!formaPago) { toast.error('Seleccioná una forma de pago'); return }
-    if (metodoEnvio === 'DOMICILIO' && !dirPrincipal && !mostrarFormDireccion) { toast.error('Agregá una dirección de envío'); return }
+    if (metodoEnvio === 'DOMICILIO' && !selectedDirId) { toast.error('Seleccioná una dirección de envío'); return }
     setCreando(true)
     try {
       const payload: CrearPedidoInput = {
@@ -109,21 +119,40 @@ export default function CheckoutPage() {
               <div style={{ marginTop: 16 }}>
                 {loadingDirs ? (
                   <p style={{ color: '#6b6151', fontSize: 13 }}>Cargando direcciones...</p>
-                ) : dirPrincipal ? (
-                  <div style={{ background: '#2a2b1b', padding: 12, borderRadius: 4, marginBottom: 12 }}>
-                    <p style={{ color: '#e4e4cc', fontSize: 13, margin: 0 }}>{dirPrincipal.calle} {dirPrincipal.numero}</p>
-                    <p style={{ color: '#6b6151', fontSize: 12, margin: '2px 0 0' }}>{dirPrincipal.ciudad}, {dirPrincipal.provincia}</p>
-                  </div>
-                ) : !mostrarFormDireccion ? (
-                  <button onClick={() => setMostrarFormDireccion(true)}
-                    style={{ padding: '10px', background: '#2a2b1b', border: '1px solid #444748', color: '#e4e4cc', fontSize: 13, cursor: 'pointer', width: '100%' }}>
-                    Agregar dirección
-                  </button>
-                ) : null}
-                {mostrarFormDireccion && (
-                  <AddressForm values={dirValues}
-                    onChange={(f, v) => setDirValues((d) => ({ ...d, [f]: v }))}
-                    onSubmit={handleCrearDireccion} />
+                ) : (
+                  <>
+                    {direcciones && direcciones.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                        <p style={{ color: '#6b6151', fontSize: 12, margin: '0 0 4px' }}>Seleccioná una dirección</p>
+                        {direcciones.map((d) => (
+                          <label key={d.id} style={{
+                            display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12', cursor: 'pointer',
+                            background: selectedDirId === d.id ? '#2a2b1b' : 'transparent',
+                            border: selectedDirId === d.id ? '1px solid #e9c349' : '1px solid #333',
+                            borderRadius: 4,
+                          }}>
+                            <input type="radio" name="direccion" checked={selectedDirId === d.id}
+                              onChange={() => setSelectedDirId(d.id)}
+                              style={{ accentColor: '#e9c349' }} />
+                            <div>
+                              <p style={{ color: '#e4e4cc', fontSize: 13, margin: 0 }}>{d.calle} {d.numero}</p>
+                              <p style={{ color: '#6b6151', fontSize: 12, margin: '2px 0 0' }}>{d.ciudad}, {d.provincia}{d.es_principal ? ' · Principal' : ''}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {mostrarFormDireccion ? (
+                      <AddressForm values={dirValues}
+                        onChange={(f, v) => setDirValues((d) => ({ ...d, [f]: v }))}
+                        onSubmit={handleCrearDireccion} />
+                    ) : (
+                      <button onClick={() => setMostrarFormDireccion(true)}
+                        style={{ padding: '10px', background: '#2a2b1b', border: '1px solid #444748', color: '#e4e4cc', fontSize: 13, cursor: 'pointer', width: '100%' }}>
+                        + Agregar dirección nueva
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             )}
