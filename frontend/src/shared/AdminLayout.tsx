@@ -1,8 +1,9 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/useAuthStore'
 
 export default function AdminLayout() {
   const { user, rol, logout } = useAuthStore()
+  const navigate = useNavigate()
   const allLinks = [
     { to: '/admin/dashboard', label: 'Dashboard', roles: ['admin'] },
     { to: '/admin/pedidos', label: 'Pedidos', roles: ['admin', 'empleado'] },
@@ -38,7 +39,7 @@ export default function AdminLayout() {
               <p style={{ color: '#6b6151', fontSize: 11, margin: 0, textTransform: 'capitalize' }}>{rol}</p>
             </div>
           </div>
-          <button onClick={() => { logout(); window.location.href = '/login' }}
+          <button onClick={() => { logout(); navigate('/login') }}
             style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px solid #343625', color: '#c4c7c7', fontSize: 12, cursor: 'pointer', borderRadius: 4 }}>
             Cerrar sesión
           </button>

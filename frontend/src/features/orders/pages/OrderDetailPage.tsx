@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useOrder, useCancelOrder } from '@/features/orders/hooks/useOrders'
+import { useOrderWS } from '@/lib/useOrderWS'
 import { imgUrl } from '@/lib/img'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -21,6 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const orderId = Number(id)
+  useOrderWS(orderId)
   const { data: order, isLoading } = useOrder(orderId)
   const cancelMutation = useCancelOrder()
 
