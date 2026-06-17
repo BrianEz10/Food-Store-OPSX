@@ -15,7 +15,7 @@ def get_ingrediente_service(session: SessionDep) -> IngredienteService:
 
 
 @router.get("/", response_model=list[IngredienteOut])
-def listar( _user: CurrentUser, svc: IngredienteService = Depends(get_ingrediente_service)):
+def listar(svc: IngredienteService = Depends(get_ingrediente_service)):
     return svc.get_all()
 
 

@@ -15,7 +15,7 @@ def get_categoria_service(session: SessionDep) -> CategoriaService:
 
 
 @router.get("/", response_model=list[CategoriaOut])
-def listar(_user: CurrentUser, parent_id: int = Query(default=None), offset: int = Query(default=0, ge=0), limit: int = Query(default=20, ge=1, le=100), svc: CategoriaService = Depends(get_categoria_service)):
+def listar(parent_id: int = Query(default=None), offset: int = Query(default=0, ge=0), limit: int = Query(default=20, ge=1, le=100), svc: CategoriaService = Depends(get_categoria_service)):
     return svc.get_all(parent_id, offset, limit)
 
 
