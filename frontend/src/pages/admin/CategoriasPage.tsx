@@ -181,7 +181,7 @@ function CategoriaModal({ mode, item, parentId, categorias, onClose, onSave }: {
       <FieldArea label="Descripción" value={descripcion} onChange={setDescripcion} />
       <Select
         label="Categoría padre"
-        value={parent ?? ''}
+        value={String(parent ?? '')}
         onChange={(v) => setParent(v ? Number(v) : null)}
         options={[
           { value: '', label: '— Ninguna (raíz) —' },

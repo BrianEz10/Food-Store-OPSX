@@ -1,29 +1,32 @@
 import { create } from 'zustand'
 
-interface Toast {
+export interface Toast {
   id: string
+  message: string
+  subtitle?: string
   type: 'success' | 'error' | 'info'
-  title: string
 }
 
 interface ToastState {
   toasts: Toast[]
-  success: (title: string, message?: string) => void
-  error: (title: string, message?: string) => void
-  remove: (id: string) => void
+  addToast: (message: string, type?: Toast['type'], subtitle?: string) => void
+  removeToast: (id: string) => void
+  success: (message: string, subtitle?: string) => void
+  error: (message: string) => void
+  info: (message: string) => void
 }
 
-export const useToastStore = create<ToastState>((set) => ({
+let _id = 0
+
+export const useToastStore = create<ToastState>((set, get) => ({
   toasts: [],
-  success: (title, message) => {
-    const id = crypto.randomUUID()
-    set((s) => ({ toasts: [...s.toasts, { id, type: 'success', title, message }] }))
-    setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), 4000)
+  addToast: (message, type = 'info', subtitle) => {
+    const id = String(++_id)
+    set({ toasts: [...get().toasts, { id, message, subtitle, type }] })
+    setTimeout(() => get().removeToast(id), 3500)
   },
-  error: (title, message) => {
-    const id = crypto.randomUUID()
-    set((s) => ({ toasts: [...s.toasts, { id, type: 'error', title, message }] }))
-    setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), 6000)
-  },
-  remove: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+  removeToast: (id) => set({ toasts: get().toasts.filter((t) => t.id !== id) }),
+  success: (message, subtitle) => get().addToast(message, 'success', subtitle),
+  error: (message) => get().addToast(message, 'error'),
+  info: (message) => get().addToast(message, 'info'),
 }))
