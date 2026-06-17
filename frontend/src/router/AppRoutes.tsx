@@ -14,6 +14,9 @@ import DetalleProductoPage from '@/features/productos/pages/DetalleProductoPage'
 import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
 import CartPage from '@/features/cart/pages/CartPage'
+import CheckoutPage from '@/features/checkout/pages/CheckoutPage'
+import PaymentPage from '@/features/checkout/pages/PaymentPage'
+import PaymentResultPage from '@/features/checkout/pages/PaymentResultPage'
 import OrdersPage from '@/features/orders/pages/OrdersPage'
 import OrderDetailPage from '@/features/orders/pages/OrderDetailPage'
 import NotFoundPage from '@/shared/NotFoundPage'
@@ -28,6 +31,10 @@ export function AppRoutes() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route element={<ProtectedRoute />}>
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/payment/:id" element={<PaymentPage />} />
+          <Route path="/orders/:id/success" element={<PaymentResultPage />} />
+          <Route path="/orders/:id/failure" element={<PaymentResultPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:id" element={<OrderDetailPage />} />
         </Route>

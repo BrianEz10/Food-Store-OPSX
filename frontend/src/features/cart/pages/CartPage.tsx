@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useCartStore } from '@/store/useCartStore'
+import { useAuthStore } from '@/store/useAuthStore'
 import { imgUrl } from '@/lib/img'
 
 export default function CartPage() {
   const { items, increaseQuantity, decreaseQuantity, removeItem, clearCart, totalAmount } = useCartStore()
+  const { token } = useAuthStore()
 
   if (items.length === 0) {
     return (
@@ -52,9 +54,15 @@ export default function CartPage() {
           <p style={{ color: '#c4c7c7', fontSize: 14, margin: 0 }}>Total</p>
           <p style={{ color: '#e9c349', fontSize: 24, fontWeight: 600, margin: '4px 0 0' }}>${totalAmount().toLocaleString('es-AR')}</p>
         </div>
-        <Link to="/login" style={{ background: '#e9c349', color: '#131407', padding: '12px 32px', textDecoration: 'none', fontSize: 15, fontWeight: 600, borderRadius: 4, cursor: 'pointer' }}>
-          Iniciar pedido
-        </Link>
+        {token ? (
+          <Link to="/checkout" style={{ background: '#e9c349', color: '#131407', padding: '12px 32px', textDecoration: 'none', fontSize: 15, fontWeight: 600, borderRadius: 4, cursor: 'pointer' }}>
+            Iniciar pedido
+          </Link>
+        ) : (
+          <Link to="/login?returnTo=/cart" style={{ background: '#e9c349', color: '#131407', padding: '12px 32px', textDecoration: 'none', fontSize: 15, fontWeight: 600, borderRadius: 4, cursor: 'pointer' }}>
+            Iniciar pedido
+          </Link>
+        )}
       </div>
     </div>
   )

@@ -1,0 +1,172 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useCartStore } from '@/store/useCartStore'
+import { useFormasPago } from '@/features/formas-pago/hooks/useFormasPago'
+import { useDirections, useCreateDirection } from '@/features/direcciones/hooks/useDirections'
+import { useCreateOrder } from '@/features/orders/hooks/useOrders'
+import { imgUrl } from '@/lib/img'
+import { parseError } from '@/lib/errorParser'
+import { useToastStore } from '@/store/useToastStore'
+import { MetodoEnvioSelector, PagoSelector, AddressForm } from '@/features/checkout/components/CheckoutComponents'
+import type { CrearPedidoInput } from '@/lib/cajero'
+
+export default function CheckoutPage() {
+  const { items, totalAmount, clearCart } = useCartStore()
+  const navigate = useNavigate()
+  const toast = useToastStore()
+  const [metodoEnvio, setMetodoEnvio] = useState('RETIRO')
+  const [formaPago, setFormaPago] = useState('')
+  const [notas, setNotas] = useState('')
+  const [creando, setCreando] = useState(false)
+  const [mostrarFormDireccion, setMostrarFormDireccion] = useState(false)
+  const [dirValues, setDirValues] = useState({ calle: '', numero: '', ciudad: '', provincia: '', codigo_postal: '', piso: '', referencia: '' })
+
+  const { data: formas } = useFormasPago()
+  const { data: direcciones, isLoading: loadingDirs } = useDirections()
+  const createDirection = useCreateDirection()
+  const createOrder = useCreateOrder()
+
+  const formastePago = formas?.filter((f) => f.habilitado) || []
+
+  const dirPrincipal = direcciones?.find((d) => d.es_principal) || direcciones?.[0]
+
+  const handleCrearDireccion = async () => {
+    try {
+      await createDirection.mutateAsync({
+        calle: dirValues.calle, numero: dirValues.numero, ciudad: dirValues.ciudad,
+        provincia: dirValues.provincia, codigo_postal: dirValues.codigo_postal,
+        piso: dirValues.piso || undefined, referencia: dirValues.referencia || undefined,
+      })
+      toast.success('Dirección guardada')
+      setMostrarFormDireccion(false)
+      setDirValues({ calle: '', numero: '', ciudad: '', provincia: '', codigo_postal: '', piso: '', referencia: '' })
+    } catch (e) { toast.error(parseError(e)) }
+  }
+
+  const handleCrearPedido = async () => {
+    if (items.length === 0) { toast.error('El carrito está vacío'); return }
+    if (!formaPago) { toast.error('Seleccioná una forma de pago'); return }
+    if (metodoEnvio === 'DOMICILIO' && !dirPrincipal && !mostrarFormDireccion) { toast.error('Agregá una dirección de envío'); return }
+    setCreando(true)
+    try {
+      const payload: CrearPedidoInput = {
+        forma_pago_codigo: formaPago,
+        metodo_envio: metodoEnvio,
+        notas: notas.trim() || null,
+        items: items.map((i) => ({
+          producto_id: i.productoId, cantidad: i.cantidad,
+          personalizacion: i.exclusiones.length > 0 ? i.exclusiones : undefined,
+        })),
+      }
+      const result = await createOrder.mutateAsync(payload)
+      clearCart()
+      if (formaPago === 'MERCADOPAGO') {
+        navigate(`/payment/${result.id}`)
+      } else {
+        toast.success('Pedido creado', `#${result.id}`)
+        navigate(`/orders/${result.id}`)
+      }
+    } catch (e) { toast.error(parseError(e)) }
+    finally { setCreando(false) }
+  }
+
+  if (items.length === 0) {
+    return (
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, color: '#e4e4cc', marginBottom: 12 }}>No hay productos en el carrito</h2>
+        <p style={{ color: '#6b6151', marginBottom: 24 }}>Agregá productos desde el catálogo para iniciar un pedido</p>
+        <a href="/" style={{ color: '#e9c349', textDecoration: 'none', fontSize: 14, cursor: 'pointer' }} onClick={(e) => { e.preventDefault(); navigate('/') }}>Ir al catálogo</a>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
+      <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, color: '#e4e4cc', marginBottom: 24 }}>Confirmar pedido</h1>
+      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ background: '#1f2111', padding: 20, borderRadius: 4 }}>
+            <h3 style={{ color: '#e4e4cc', fontSize: 15, margin: '0 0 12px', fontWeight: 500 }}>Productos</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {items.map((item) => (
+                <div key={item.productoId} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ width: 44, height: 44, background: '#2a2b1b', borderRadius: 4, overflow: 'hidden', flexShrink: 0 }}>
+                    {item.imagenUrl && <img src={imgUrl(item.imagenUrl)} alt={item.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ color: '#e4e4cc', fontSize: 13, margin: 0 }}>{item.nombre} <span style={{ color: '#6b6151' }}>x{item.cantidad}</span></p>
+                  </div>
+                  <p style={{ color: '#e9c349', fontSize: 13, margin: 0, fontWeight: 500 }}>${(item.precio * item.cantidad).toLocaleString('es-AR')}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: '#1f2111', padding: 20, borderRadius: 4 }}>
+            <h3 style={{ color: '#e4e4cc', fontSize: 15, margin: '0 0 12px', fontWeight: 500 }}>Método de entrega</h3>
+            <MetodoEnvioSelector value={metodoEnvio} onChange={setMetodoEnvio} />
+            {metodoEnvio === 'DOMICILIO' && (
+              <div style={{ marginTop: 16 }}>
+                {loadingDirs ? (
+                  <p style={{ color: '#6b6151', fontSize: 13 }}>Cargando direcciones...</p>
+                ) : dirPrincipal ? (
+                  <div style={{ background: '#2a2b1b', padding: 12, borderRadius: 4, marginBottom: 12 }}>
+                    <p style={{ color: '#e4e4cc', fontSize: 13, margin: 0 }}>{dirPrincipal.calle} {dirPrincipal.numero}</p>
+                    <p style={{ color: '#6b6151', fontSize: 12, margin: '2px 0 0' }}>{dirPrincipal.ciudad}, {dirPrincipal.provincia}</p>
+                  </div>
+                ) : !mostrarFormDireccion ? (
+                  <button onClick={() => setMostrarFormDireccion(true)}
+                    style={{ padding: '10px', background: '#2a2b1b', border: '1px solid #444748', color: '#e4e4cc', fontSize: 13, cursor: 'pointer', width: '100%' }}>
+                    Agregar dirección
+                  </button>
+                ) : null}
+                {mostrarFormDireccion && (
+                  <AddressForm values={dirValues}
+                    onChange={(f, v) => setDirValues((d) => ({ ...d, [f]: v }))}
+                    onSubmit={handleCrearDireccion} />
+                )}
+              </div>
+            )}
+          </div>
+
+          <div style={{ background: '#1f2111', padding: 20, borderRadius: 4 }}>
+            <h3 style={{ color: '#e4e4cc', fontSize: 15, margin: '0 0 12px', fontWeight: 500 }}>Forma de pago</h3>
+            {formastePago.length > 0 ? (
+              <PagoSelector value={formaPago} onChange={setFormaPago} />
+            ) : (
+              <p style={{ color: '#6b6151', fontSize: 13 }}>Cargando formas de pago...</p>
+            )}
+          </div>
+
+          <div style={{ background: '#1f2111', padding: 20, borderRadius: 4 }}>
+            <h3 style={{ color: '#e4e4cc', fontSize: 15, margin: '0 0 12px', fontWeight: 500 }}>Notas</h3>
+            <textarea value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Algún comentario para el pedido..."
+              style={{ width: '100%', padding: '10px 12px', background: '#2a2b1b', color: '#e4e4cc', border: '1px solid #444748', outline: 'none', fontSize: 13, boxSizing: 'border-box', minHeight: 60, resize: 'vertical' }} />
+          </div>
+        </div>
+
+        <div style={{ flex: '0 0 300px' }}>
+          <div style={{ background: '#1f2111', padding: 20, borderRadius: 4, position: 'sticky', top: 88 }}>
+            <h3 style={{ color: '#e4e4cc', fontSize: 15, margin: '0 0 16px', fontWeight: 500 }}>Resumen</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ color: '#c4c7c7', fontSize: 14 }}>Subtotal</span>
+              <span style={{ color: '#c4c7c7', fontSize: 14 }}>${totalAmount().toLocaleString('es-AR')}</span>
+            </div>
+            <div style={{ borderTop: '1px solid #2a2b1b', paddingTop: 12, display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#e4e4cc', fontSize: 16, fontWeight: 600 }}>Total</span>
+              <span style={{ color: '#e9c349', fontSize: 18, fontWeight: 600 }}>${totalAmount().toLocaleString('es-AR')}</span>
+            </div>
+            <button onClick={handleCrearPedido} disabled={creando || !formaPago}
+              style={{
+                width: '100%', marginTop: 20, padding: '14px', cursor: creando || !formaPago ? 'not-allowed' : 'pointer',
+                background: '#e9c349', color: '#131407', border: 'none', fontSize: 15, fontWeight: 600, borderRadius: 4,
+                opacity: creando || !formaPago ? 0.5 : 1,
+              }}>
+              {creando ? 'Creando pedido...' : 'Confirmar pedido'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

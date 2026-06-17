@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLogin } from '@/features/auth/hooks/useAuth'
 import { parseError } from '@/lib/errorParser'
 
@@ -8,6 +8,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const returnTo = searchParams.get('returnTo') || ''
   const loginMutation = useLogin()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -15,7 +17,8 @@ export default function LoginPage() {
     setError('')
     try {
       const rol = await loginMutation.mutateAsync({ email, password })
-      navigate(rol === 'cliente' ? '/' : '/admin/dashboard', { replace: true })
+      const target = returnTo && rol === 'cliente' ? returnTo : (rol === 'cliente' ? '/' : '/admin/dashboard')
+      navigate(target, { replace: true })
     } catch (err) {
       setError(parseError(err))
     }
